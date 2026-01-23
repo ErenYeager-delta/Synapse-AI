@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - TechNest</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .auth-container {
+            max-width: 400px;
+            margin: 60px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .auth-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .auth-form .form-group {
+            margin-bottom: 15px;
+        }
+        .auth-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .auth-form input, .auth-form select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .auth-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .error-message {
+            color: #dc2626;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body style="background: #f3f4f6;">
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>🔍 TechNest</h1>
+            <p>Create your account</p>
+        </div>
+        
+        <div id="errorMessage" class="error-message"></div>
+
+        <form class="auth-form" id="registerForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+            </div>
+            <div class="form-group">
+                <label for="role">I am a...</label>
+                <select id="role">
+                    <option value="customer">Customer</option>
+                    <option value="vendor">Vendor / Seller</option>
+                </select>
+            </div>
+            <div class="form-group" id="vendorNameGroup" style="display: none;">
+                <label for="vendorName">Vendor/Shop Name</label>
+                <input type="text" id="vendorName">
+            </div>
+            <button type="submit" class="auth-btn">Register</button>
+        </form>
+
+        <div class="auth-footer">
+            Already have an account? <a href="login.html">Login here</a>
+        </div>
+    </div>
+
+    <script>
+        const roleSelect = document.getElementById('role');
+        const vendorGroup = document.getElementById('vendorNameGroup');
+
+        roleSelect.addEventListener('change', () => {
+            vendorGroup.style.display = roleSelect.value === 'vendor' ? 'block' : 'none';
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+            const vendor_name = document.getElementById('vendorName').value;
+            const errorElement = document.getElementById('errorMessage');
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password, role, vendor_name })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Registration successful! Please login.');
+                    window.location.href = 'login.html';
+                } else {
+                    errorElement.textContent = data.error || 'Registration failed';
+                    errorElement.style.display = 'block';
+                }
+            } catch (err) {
+                errorElement.textContent = 'Server connection failed';
+                errorElement.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

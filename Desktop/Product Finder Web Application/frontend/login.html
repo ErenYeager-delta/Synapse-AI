@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - TechNest</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .auth-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .auth-form .form-group {
+            margin-bottom: 20px;
+        }
+        .auth-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .auth-form input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .auth-btn:hover {
+            background: #1d4ed8;
+        }
+        .auth-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .error-message {
+            color: #dc2626;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body style="background: #f3f4f6;">
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>🔍 TechNest</h1>
+            <p>Welcome back! Please login.</p>
+        </div>
+        
+        <div id="errorMessage" class="error-message"></div>
+
+        <form class="auth-form" id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Login As</label>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <label style="flex: 1; text-align: center; border: 1px solid #ddd; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" id="labelCustomer">
+                        <input type="radio" name="loginRole" value="customer" checked style="width: auto; margin-bottom: 5px;"> Customer
+                    </label>
+                    <label style="flex: 1; text-align: center; border: 1px solid #ddd; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" id="labelVendor">
+                        <input type="radio" name="loginRole" value="vendor" style="width: auto; margin-bottom: 5px;"> Vendor
+                    </label>
+                    <label style="flex: 1; text-align: center; border: 1px solid #ddd; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" id="labelAdmin">
+                        <input type="radio" name="loginRole" value="admin" style="width: auto; margin-bottom: 5px;"> Admin
+                    </label>
+                </div>
+            </div>
+            <button type="submit" class="auth-btn">Login</button>
+        </form>
+
+        <div class="auth-footer">
+            Don't have an account? <a href="register.html">Register here</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorElement = document.getElementById('errorMessage');
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('techNestToken', data.access_token);
+                    localStorage.setItem('techNestRole', data.role);
+                    localStorage.setItem('techNestUser', data.username);
+                    if (data.vendor_id) localStorage.setItem('techNestVendorId', data.vendor_id);
+                    
+                    window.location.href = 'index.html';
+                } else {
+                    errorElement.textContent = data.error || 'Login failed';
+                    errorElement.style.display = 'block';
+                }
+            } catch (err) {
+                errorElement.textContent = 'Server connection failed';
+                errorElement.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
