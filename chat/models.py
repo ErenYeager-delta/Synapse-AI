@@ -19,7 +19,10 @@ class ChatSession(models.Model):
         ordering = ['-updated_at']
 
     def __str__(self):
-        return f"{self.user.username} — {self.title}"
+        try:
+            return f"{self.user.username if self.user else 'Unknown User'} — {self.title}"
+        except Exception:
+            return f"Session {self.id} — {self.title}"
 
 
 class ChatMessage(models.Model):
@@ -37,4 +40,8 @@ class ChatMessage(models.Model):
         ordering = ['timestamp']
 
     def __str__(self):
-        return f"[{self.role}] {self.content[:50]}..."
+        try:
+            prev = self.content[:50] if self.content else "No Content"
+            return f"[{self.role}] {prev}..."
+        except Exception:
+            return f"Message {self.id}"

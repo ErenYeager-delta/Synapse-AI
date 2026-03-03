@@ -51,6 +51,7 @@ class ChatMessageAdmin(admin.ModelAdmin):
     list_filter  = ('role',)
 
     def short_content(self, obj):
+        if not obj.content: return "No content"
         return obj.content[:80] + '...' if len(obj.content) > 80 else obj.content
     short_content.short_description = 'Content'
 
