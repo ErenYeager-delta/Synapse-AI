@@ -26,6 +26,7 @@ Synapse uses a custom `MongoAuthBackend` that treats MongoDB Atlas as the "Sourc
 
 - **File Uploads**: When you click the paperclip icon (Frontend UI), `chat.js` captures the file and converts it to a Base64 stream.
 - **Real-Time Pipeline**: This data is sent via an asynchronous WebSocket frame (Django Channels).
+- **Security Audit (2026)**: Conducted an audit for LangChain SSRF (CVE-2026-26013). Synapse is **immune** because it utilizes `langchain-google-genai` for vision, bypassing the vulnerable OpenAI token-counting logic.
 - **Asset Processing**: The AI Engine (Backend Logic) uses LangChain's Gemini SDK to process image parts as `inline_data`.
 - **The "Silk" Effect**: We implemented a custom `scroll-behavior: smooth` logic that waits for the `HTMLImageElement.decode()` event. This prevents the "jumping" effect seen in lesser chat apps when large images load.
 

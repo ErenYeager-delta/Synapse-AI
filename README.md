@@ -43,11 +43,12 @@ Unlike generic chat interfaces, Synapse AI is architected for **zero-dependency 
 
 ### 4. System Integrity & Security
 
-| Role           | Tech / Implementation                  | Logic & Purpose                                                                   |
-| :------------- | :------------------------------------- | :-------------------------------------------------------------------------------- |
-| **Encryption** | HMAC-SHA256 (Salted with `SECRET_KEY`) | **Why**: Protects API primary keys in the database while allowing usage tracking. |
-| **Integrity**  | Subresource Integrity (SRI) Hashes     | **Why**: Prevents CDN compromise from injecting malicious JS into your chat.      |
-| **Monitoring** | Live System Monitor (SVG/JS)           | **Why**: Provides real-time transparency into the health of the 4x API key pool.  |
+| Role             | Tech / Implementation                  | Logic & Purpose                                                                    |
+| :--------------- | :------------------------------------- | :--------------------------------------------------------------------------------- |
+| **Encryption**   | HMAC-SHA256 (Salted with `SECRET_KEY`) | **Why**: Protects API primary keys in the database while allowing usage tracking.  |
+| **Integrity**    | Subresource Integrity (SRI) Hashes     | **Why**: Prevents CDN compromise from injecting malicious JS into your chat.       |
+| **Audit (2026)** | SSRF Hardened (CVE-2026-26013)         | **Why**: Verified immunity to LangChain OpenAI SSRF; running latest `0.3.83` core. |
+| **Monitoring**   | Live System Monitor (SVG/JS)           | **Why**: Provides real-time transparency into the health of the 4x API key pool.   |
 
 ---
 
