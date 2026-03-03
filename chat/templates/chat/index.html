@@ -55,7 +55,13 @@
            Global capacity unknown
         </div>
       </div>
-      <div class="user-info">
+        <!-- New Professional Credits -->
+        <div class="footer-credits">
+            <p>&copy; 2026 Synapse AI</p>
+            <p>Expertly powered by <span style="color:var(--accent-cyan); font-weight:700;">Google Gemini</span></p>
+        </div>
+
+        <div class="user-info">
         <span class="user-avatar">{{ user.username|first|upper }}</span>
         <div class="user-meta">
             <span class="user-name">{{ user.username }}</span>
@@ -215,9 +221,11 @@
   </div>
 </div>
 
+{% block footer %}
+<!-- Global footer hidden for Chat Main to prevent overflow -->
 {% endblock %}
 
-    {% block extra_scripts %}
+{% block extra_scripts %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>

@@ -248,7 +248,19 @@ const SynapseChat = (() => {
   }
 
   function escapeHtml(text) { const d = document.createElement("div"); d.textContent = text; return d.innerHTML; }
-  function scrollToBottom()  { const c = $("#messages-container"); requestAnimationFrame(() => c.scrollTop = c.scrollHeight); }
+  function scrollToBottom() {
+    const c = $("#messages-container");
+    if (!c) return;
+    const threshold = 150; // pixels from bottom to trigger auto-scroll
+    const isAtBottom = c.scrollHeight - c.scrollTop - c.clientHeight <= threshold;
+    
+    // Always scroll if it's the first few messages or if user is already near bottom
+    if (isAtBottom || c.childNodes.length < 2) {
+      requestAnimationFrame(() => {
+        c.scrollTo({ top: c.scrollHeight, behavior: "smooth" });
+      });
+    }
+  }
   function hideWelcome()     { $("#welcome-screen")?.remove(); }
   function showWelcome()     { location.reload(); }
 

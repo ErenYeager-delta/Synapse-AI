@@ -30,18 +30,16 @@
   padding: 0;
 }
 
-body {
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
   background: var(--bg-darker);
   background-image: var(--bg-gradient);
   color: var(--text-primary);
-  font-family:
-    "Inter",
-    -apple-system,
-    system-ui,
-    sans-serif;
-  min-height: 100vh;
+  font-family: "Inter", -apple-system, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
 }
 
 /* ─── Layout ────────────────────────────────────────── */
@@ -544,6 +542,18 @@ select.form-input {
 .usage-bar { height:100%; background:linear-gradient(90deg, var(--accent-cyan), var(--accent-secondary)); border-radius:10px; transition:width 1s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--accent-glow); }
 .usage-text { font-size:11px; color:var(--text-secondary); font-weight:600; font-variant-numeric: tabular-nums; }
 .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--accent-cyan); box-shadow: 0 0 8px var(--accent-cyan); animation: pulse 2s infinite linear; }
+
+/* Sidebar Credits */
+.footer-credits { 
+  padding: 12px; 
+  margin-top: auto; 
+  border-top: 1px solid var(--border); 
+  font-size: 11px; 
+  color: var(--text-muted); 
+  text-align: center;
+  line-height: 1.4;
+}
+
 .key-pool-list { display: flex; flex-direction: column; gap: 12px; max-height: 200px; overflow-y: auto; padding-right: 4px; }
 .key-pool-item { display: flex; flex-direction: column; gap: 6px; }
 .key-pool-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
@@ -669,6 +679,26 @@ select.form-input {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  scroll-behavior: smooth;
+}
+
+/* Silk Scrollbar - Professional & Visible */
+.messages-container::-webkit-scrollbar {
+  width: 8px;
+}
+.messages-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+.messages-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 242, 255, 0.15);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: all 0.3s;
+}
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 242, 255, 0.4);
+  background-clip: content-box;
 }
 
 /* ─── Welcome Screen ────────────────────────────────── */
