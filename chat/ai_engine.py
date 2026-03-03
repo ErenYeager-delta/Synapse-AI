@@ -10,9 +10,20 @@ from django.core.cache import cache
 from .mongo_store import mongo_store
 
 def _secure_hash(data: str) -> str:
-    """Generate a secure salted hash for API keys."""
+    """Generate a secure salted hash for API keys.
+
+    Uses PBKDF2-HMAC with SHA-256 to derive a short, deterministic identifier
+    from a sensitive key without storing or logging the raw value.
+    """
     salt = settings.SECRET_KEY.encode()
-    return hmac.new(salt, data.encode(), hashlib.sha256).hexdigest()[:12]
+    dk = hashlib.pbkdf2_hmac(
+        hash_name='sha256',
+        password=data.encode(),
+        salt=salt,
+        iterations=100_000,
+        dklen=32,
+    )
+    return dk.hex()[:12]
 
 # --- 2026 ROADMAP CONFIG ---
 AI_MODELS = {
