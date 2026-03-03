@@ -125,6 +125,8 @@ try:
             'CONFIG': {'hosts': [REDIS_URL]},
         },
     }
+    # Persistence Fix: Use Redis for sessions to survive stateless redeploys
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 except Exception:
     CACHES = {
         'default': {

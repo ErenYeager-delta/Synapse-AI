@@ -15,8 +15,13 @@ from .otp_service import otp_service
 
 @login_required
 def get_usage_view(request):
-    remaining, total = get_remaining_chats()
-    return JsonResponse({'status': 'success', 'remaining': remaining, 'total': total})
+    remaining, total, key_stats = get_remaining_chats()
+    return JsonResponse({
+        'status': 'success', 
+        'remaining': remaining, 
+        'total': total,
+        'key_stats': key_stats
+    })
 
 
 def manifest_view(request):

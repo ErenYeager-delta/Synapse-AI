@@ -1,6 +1,6 @@
 # Synapse AI — Professional Coding Assistant
 
-Synapse is a high-performance, expert-level AI coding assistant built for developers. It utilizes **Google Gemini 2.5-Flash** (with seamless 2.5-Flash-Lite failover) and a robust **Django + MongoDB** backend to provide real-time, token-streamed coding solutions.
+Synapse is a high-performance, expert-level AI coding assistant built for developers. It utilizes **Google Gemini 2.5-Flash** (with seamless 2.5-Flash-Lite failover) and a robust **Django + MongoDB** backend to provide real-time, token-streamed coding solutions, now wrapped in a stunning **Neon Cyan** brand identity.
 
 ---
 
@@ -27,49 +27,24 @@ Synapse follows a modern, decoupled architecture designed for high availability 
 - **Custom MongoDB Auth**: A bespoke authentication backend that stores users directly in MongoDB, bypassing the need for local SQLite databases in production.
 - **Dual-Stage AI Rotation**: An intelligent engine that prioritizes the latest Gemini 2.5-Flash but automatically rolls back to 2.5-Flash-Lite across a pool of 4 API keys if quotas are reached.
 - **Real-Time Streaming**: Powered by Django Channels and WebSockets to deliver "typewriter-style" responses as the AI generates them.
-- **Intelligent Titling**: Automated summarization that renames "New Chat" sessions based on the actual conversation context.
+- **Live System Monitor**: A real-time monitoring system in the sidebar that tracks the health and capacity of the entire API key pool, ensuring transparency for all users.
+- **Hybrid "Staff Engineer" Persona**: Synapse now combines the logical rigor and technical depth of Claude 3.5 Sonnet with the professional polish of Google Gemini.
+- **Neon Cyan Design System**: A unified, high-contrast UI/UX built with a custom obsidian teal and electric blue palette.
+- **Stateless Persistence**: Optimized session management designed to survive deployments on free, ephemeral cloud platforms like Railway.
 
 ---
-
-## �️ Technical Stack
-
-| General Name | Technical Component / Library | Version |
-| :----------- | :---------------------------- | :------ |
 
 ## 🛠️ Technical Stack
 
-| General Name           | Technical Component / Library        | Version                     |
-| :--------------------- | :----------------------------------- | :-------------------------- |
-| **Core Runtime**       | Python (Interpreter Engine)          | 3.12+                       |
-| **Web Framework**      | Django (MTV Architecture)            | 4.2.28                      |
-| **Asynchronous Layer** | Django Channels (WebSocket Consumer) | 4.1.0                       |
-| **ASGI Server**        | Daphne (HTTP/WS Interface)           | 4.1.2                       |
-| **Primary Database**   | MongoDB Atlas (Document Store)       | 4.7.3 (PyMongo)             |
-| **AI Orchestration**   | LangChain (LLM Framework)            | 0.3.27                      |
-| **Gemini Interface**   | LangChain Google GenAI (SDK)         | 2.1.2 (google-genai >= 1.0) |
-| **Caching/Messaging**  | Redis (In-Memory Key-Value)          | 5.0.8                       |
-| **Environment**        | Python-Dotenv (Config Loader)        | 1.2.2                       |
-
----
-
-## 📁 Project Structure
-
-```text
-Synapse/
-├── chat/
-│   ├── static/chat/       # CSS/JS (Glassmorphic UI + Marked.js)
-│   ├── templates/chat/    # Django HTML Templates
-│   ├── ai_engine.py       # LLM Rotation, Titling, & Prompting
-│   ├── mongo_store.py     # Centralized Pymongo CRUD
-│   ├── mongo_auth.py      # MongoDB User Auth Backend
-│   ├── consumers.py       # WebSocket streaming logic
-│   └── views.py           # Registration, OTP, & Settings
-├── synapse_project/       # Project Configuration
-│   ├── settings.py        # Optimized Prod/Dev settings
-│   └── asgi.py            # Async gateway for WebSockets
-├── requirements.txt       # Audited production dependencies
-└── manage.py              # Entry point
-```
+| General Name           | Technical Component / Library        | Version                 |
+| :--------------------- | :----------------------------------- | :---------------------- |
+| **Core Runtime**       | Python (Interpreter Engine)          | 3.12+                   |
+| **Web Framework**      | Django (MTV Architecture)            | 4.2.28                  |
+| **Asynchronous Layer** | Django Channels (WebSocket Consumer) | 4.1.0                   |
+| **Primary Database**   | MongoDB Atlas (Document Store)       | 4.7.3 (PyMongo)         |
+| **AI Orchestration**   | LangChain (LLM Framework)            | 0.3.27                  |
+| **Security Scanning**  | CodeQL & git-filter-repo             | 2026 Ready              |
+| **Styling**            | Vanilla CSS (Design Tokens)          | Custom Neon Cyan System |
 
 ---
 
@@ -77,10 +52,11 @@ Synapse/
 
 ### ⚠️ IMPORTANT: API Key Security
 
-To prevent **API Key Leakage**, never commit your `.env` file to GitHub.
+To prevent **API Key Leakage**, we have implemented **Git History Scrubbing**.
 
-1.  Ensure `.env` is listed in your `.gitignore`.
-2.  Use **Environment Variables** in your hosting dashboard (Railway/Render) to inject keys safely.
+1.  **Git Scrubbing**: Use `git-filter-repo` to permanently remove accidental secret commits.
+2.  **Env Masking**: API keys are automatically masked in all server logs (e.g., `AIza...8Bjk`).
+3.  **SRI Protection**: All external CDN scripts use Subresource Integrity (SRI) hashes to prevent man-in-the-middle attacks.
 
 ### 1. Railway Deployment (Recommended)
 
@@ -88,22 +64,6 @@ To prevent **API Key Leakage**, never commit your `.env` file to GitHub.
 2.  **Add MongoDB**: Provision a MongoDB service in your project.
 3.  **Variables**: Add all `.env` keys (GEMINI_API_KEYS, MONGO_URI, etc.).
 4.  **Start Command**: `daphne -b 0.0.0.0 -p $PORT synapse_project.asgi:application`
-
-### 2. Render Deployment
-
-1.  **Web Service**: Create a new Web Service from your repo.
-2.  **Environment**: Select Python.
-3.  **Build Command**: `pip install langchain==0.3.27 langchain-google-genai==2.1.2 langchain-community==0.3.31 duckduckgo-search==8.1.1 google-genai>=1.0.0 && python manage.py collectstatic --noinput`
-4.  **Start Command**: `daphne -b 0.0.0.0 -p $PORT synapse_project.asgi:application`
-5.  **Redis**: Render requires a separate Redis instance for WebSockets to work.
-
----
-
-## 🛡️ Leakage Protection Guide
-
-- **Env Masking**: Synapse automatically masks API keys in server logs (e.g., `AIza...8Bjk`).
-- **No Client Keys**: API keys are handled strictly on the server; the frontend never sees them.
-- **Hashed PWDs**: User passwords are encrypted using Django's PBKDF2 algorithm before being saved to MongoDB.
 
 ---
 
@@ -116,27 +76,18 @@ To prevent **API Key Leakage**, never commit your `.env` file to GitHub.
 
 ---
 
-## 💎 100% Verified Integration
+## 🛠️ Management & Maintenance
 
-This project has undergone a complete system-wide audit to ensure flawless performance:
+### Promoting an Administrator (Cloud/Local)
 
-- **Connected Logic**: Authentication, AI Rotation, and MongoDB storage are seamlessly linked.
-- **Environment Agnostic**: Tested for zero-error performance on Windows (Local) and Linux (Railway/Render).
-- **Scalable Baseline**: Optimized for Python 3.12+ and the 2026 Gemini API roadmap.
+To access the `/admin` panel on Railway or locally:
 
-**Synapse AI is mission-ready.**
+1.  **Promotion Script**: Run the following locally (after setting your Cloud Mongo URI):
+    ```powershell
+    python promote_user.py <username>
+    ```
+2.  **Access**: Log in at [synapse-ai-production.up.railway.app/admin/](https://synapse-ai-production-3002.up.railway.app/admin/)
 
 ---
 
-## 🛠️ Management & Maintenance
-
-### Promoting an Administrator
-
-To access the `/admin` panel and see all user chats/data:
-
-1.  **Standard Command**: Run the following in your terminal:
-    ```powershell
-    python manage.py createsuperuser
-    ```
-2.  **Auto-Sync**: The system will automatically sync this admin account to MongoDB.
-3.  **Access**: Log in at `http://127.0.0.1:8000/admin`.
+**Synapse AI is mission-ready. The code is clean, the history is scrubbed, and the design is electric.** 🚀💎🛡️

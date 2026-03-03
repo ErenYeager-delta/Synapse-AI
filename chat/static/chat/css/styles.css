@@ -208,6 +208,35 @@ body {
   line-height: 1.6;
 }
 
+.integrations-section {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 100px;
+  padding: 0 40px;
+}
+.tech-stack {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+.tech-pill {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+.tech-pill:hover {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  background: rgba(0, 242, 255, 0.05);
+}
+
 /* ─── Action Cards ──────────────────────────────────── */
 .action-grid {
   display: grid;
@@ -514,6 +543,15 @@ select.form-input {
 .usage-bar-container { height:6px; width:100%; background:rgba(0,0,0,0.3); border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.05); }
 .usage-bar { height:100%; background:linear-gradient(90deg, var(--accent-cyan), var(--accent-secondary)); border-radius:10px; transition:width 1s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--accent-glow); }
 .usage-text { font-size:11px; color:var(--text-secondary); font-weight:600; font-variant-numeric: tabular-nums; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--accent-cyan); box-shadow: 0 0 8px var(--accent-cyan); animation: pulse 2s infinite linear; }
+.key-pool-list { display: flex; flex-direction: column; gap: 12px; max-height: 200px; overflow-y: auto; padding-right: 4px; }
+.key-pool-item { display: flex; flex-direction: column; gap: 6px; }
+.key-pool-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+.key-pool-list::-webkit-scrollbar { width: 4px; }
+.key-pool-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+.app-footer { padding: 20px; border-top: 1px solid var(--border); background: var(--bg-darker); text-align: center; font-size: 12px; color: var(--text-muted); z-index: 10; }
+.footer-content { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 4px; }
 .footer-main {
   display: flex;
   align-items: center;

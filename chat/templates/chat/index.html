@@ -42,12 +42,18 @@
       {% endfor %}
     </div>
     <div class="sidebar-footer">
-      <div id="usage-info" class="usage-info" style="display: none">
-        <div class="usage-label">Chat Availability</div>
-        <div class="usage-bar-container">
-          <div id="usage-bar" class="usage-bar" style="width: 100%"></div>
+      <!-- New Live System Monitor -->
+      <div id="system-monitor" class="usage-info" style="display: none">
+        <div class="usage-label" style="margin-bottom: 8px;">
+          <span>System Health</span>
+          <span class="status-dot"></span>
         </div>
-        <div id="usage-text" class="usage-text">Calculating...</div>
+        <div id="key-pool-list" class="key-pool-list">
+           <!-- Dynamic key stats will go here -->
+        </div>
+        <div id="usage-text" class="usage-text" style="margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+           Global capacity unknown
+        </div>
       </div>
       <div class="user-info">
         <span class="user-avatar">{{ user.username|first|upper }}</span>
@@ -209,14 +215,24 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGqGVUmRy22qllWoRIBv6iZeRRVdm69duB9NJ7zhpJHm7szEnHUbuEIdVatA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" integrity="sha384-Y757/jC+6D8T+D0+7P9c9Xn7/x6Yp+K9X4/8vU=" crossorigin="anonymous"></script>
-<script>
-  window.SYNAPSE = {
-      wsUrl:            (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/chat/',
-      csrfToken:        "{{ csrf_token }}",
-      currentSessionId: null
-  };
-</script>
-<script src="{% static 'chat/js/chat.js' %}"></script>
-{% endblock %}
+    <footer class="app-footer">
+        <div class="footer-content">
+            <p>&copy; 2026 Synapse AI. All rights reserved.</p>
+            <p>Special thanks to <span style="color:var(--accent-cyan); font-weight:700;">Google Corp</span> for the expert Gemini API suite.</p>
+        </div>
+    </footer>
+    {% block extra_scripts %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+      window.SYNAPSE = {
+        csrfToken: "{{ csrf_token }}",
+        currentSessionId: "{{ sessions.0.id|default:'' }}",
+        wsUrl:
+          (window.location.protocol === "https:" ? "wss://" : "ws://") +
+          window.location.host +
+          "/ws/chat/",
+      };
+    </script>
+    <script src="{% static 'chat/js/chat.js' %}"></script>
+    {% endblock %}

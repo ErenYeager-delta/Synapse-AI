@@ -15,22 +15,40 @@ const SynapseChat = (() => {
       const r = await fetch("/api/usage/");
       const data = await r.json();
       if (data.status === "success") {
-        const info = $("#usage-info");
-        const bar  = $("#usage-bar");
+        const monitor = $("#system-monitor");
+        const list = $("#key-pool-list");
         const text = $("#usage-text");
-        if (info && bar && text) {
-          const percent = (data.remaining / data.total) * 100;
-          bar.style.width = `${percent}%`;
-          text.innerText = `${data.remaining.toLocaleString()} / ${data.total.toLocaleString()} left`;
-          info.style.display = "flex";
+        if (monitor && list && text) {
+          const totalRemaining = data.remaining;
+          const totalCapacity = data.total;
+          const percent = (totalRemaining / totalCapacity) * 100;
+
+          // Update Global Text
+          text.innerText = `Global: ${totalRemaining.toLocaleString()} / ${totalCapacity.toLocaleString()} left`;
           
-          if (percent < 15) {
-            bar.style.background = "linear-gradient(90deg, #F43F5E, #FB7185)"; // Rose
-            bar.style.boxShadow = "0 0 10px rgba(244,63,94,0.4)";
-          } else {
-            bar.style.background = "linear-gradient(90deg, #10B981, #34D399)"; // Cyan/Emerald
-            bar.style.boxShadow = "0 0 10px rgba(16,185,129,0.3)";
-          }
+          // Clear and Render Key List
+          list.innerHTML = "";
+          data.key_stats.forEach(key => {
+              const kItem = document.createElement("div");
+              kItem.className = "key-pool-item";
+              const kColor = key.percent < 20 ? "var(--accent-rose)" : "var(--accent-cyan)";
+              kItem.innerHTML = `
+                <div class="key-pool-label">
+                    <span>${key.label}</span>
+                    <span>${key.percent}%</span>
+                </div>
+                <div class="usage-bar-container">
+                    <div class="usage-bar" style="width: ${key.percent}%; background: ${kColor}; box-shadow: 0 0 8px ${kColor}44;"></div>
+                </div>
+              `;
+              list.appendChild(kItem);
+          });
+
+          monitor.style.display = "flex";
+          
+          // Update global pulse color
+          const dot = $(".status-dot");
+          if (dot) dot.style.background = percent < 15 ? "var(--accent-rose)" : "var(--accent-cyan)";
         }
       }
     } catch (e) {
@@ -140,6 +158,7 @@ const SynapseChat = (() => {
   }
 
   function showError(text) {
+    isStreaming = false;
     $("#messages-container").insertAdjacentHTML("beforeend",
       `<div class="message-ai error-msg"><div class="message-bubble">&#9888; ${escapeHtml(text)}</div></div>`
     );
@@ -159,6 +178,9 @@ const SynapseChat = (() => {
     $("#btn-send").disabled = true; input.disabled = true;
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ message, session_id: currentSessionId }));
+    } else {
+      showError("Connection lost. Reconnecting...");
+      connectWebSocket();
     }
   }
 

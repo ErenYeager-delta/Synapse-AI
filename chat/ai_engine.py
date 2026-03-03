@@ -9,6 +9,13 @@ from django.conf import settings
 from django.core.cache import cache
 from .mongo_store import mongo_store
 
+# --- 2026 ROADMAP CONFIG ---
+AI_MODELS = {
+    'PRIMARY': 'gemini-2.5-flash',
+    'FALLBACK': 'gemini-2.5-flash-lite',
+    'VERSION': 'v1'
+}
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,30 +54,44 @@ def _get_api_key(user_id, exclude_keys=None):
 
 def get_remaining_chats():
     """
-    Calculate remaining chats across all keys.
-    Gemini Free tier is ~1500 RPD (Requests Per Day).
-    We track usage in cache with a daily key.
+    Calculate remaining chats for ALL keys in the pool.
+    Returns (total_remaining, total_capacity, key_stats_list).
     """
     import datetime
     today = datetime.date.today().isoformat()
-    usage_key = f"synapse:usage:{today}"
-    usage = cache.get(usage_key, 0)
+    app_keys = getattr(settings, 'GEMINI_API_KEYS', [])
+    if not app_keys:
+        primary = getattr(settings, 'GEMINI_API_KEY', '')
+        app_keys = [primary] if primary else []
+
+    key_stats = []
+    total_remaining = 0
+    total_capacity = len(app_keys) * 1500
+
+    for i, key in enumerate(app_keys):
+        k_hash = hashlib.sha256(key.encode()).hexdigest()[:8]
+        usage_key = f"synapse:usage:{today}:{k_hash}"
+        usage = cache.get(usage_key, 0)
+        remaining = max(0, 1500 - usage)
+        total_remaining += remaining
+        key_stats.append({
+            'index': i + 1,
+            'label': f"Key {i+1} ({k_hash})",
+            'used': usage,
+            'remaining': remaining,
+            'percent': round((remaining / 1500) * 100, 1)
+        })
     
-    num_keys = len(getattr(settings, 'GEMINI_API_KEYS', []))
-    if not num_keys: num_keys = 1
-    
-    # 1500 requests per key per day
-    total_capacity = num_keys * 1500
-    remaining = max(0, total_capacity - usage)
-    return remaining, total_capacity
+    return total_remaining, total_capacity, key_stats
 
 
-def _increment_usage():
+def _increment_usage(api_key):
+    if not api_key: return
     import datetime
     today = datetime.date.today().isoformat()
-    usage_key = f"synapse:usage:{today}"
+    k_hash = hashlib.sha256(api_key.encode()).hexdigest()[:8]
+    usage_key = f"synapse:usage:{today}:{k_hash}"
     try:
-        # Increment global usage. 86400s = 1 day.
         cache.get_or_set(usage_key, 0, 86400)
         cache.incr(usage_key)
     except Exception:
@@ -86,7 +107,7 @@ def _get_llm(user_id, api_key=None):
         raise ValueError("No GEMINI_API_KEY available.")
     
     return ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
+        model=AI_MODELS['PRIMARY'],
         google_api_key=api_key,
         temperature=0.4,
         max_output_tokens=4096,
@@ -113,17 +134,19 @@ def run_chat(user_id: int, message: str, session_id: str = None) -> str:
 
     lang = _get_preferred_lang(user_id)
 
-    system_prompt = f"""You are Synapse, an expert AI coding assistant built for developers.
+    system_prompt = f"""You are Synapse AI, a state-of-the-art software engineering assistant.
+Your persona combines the extreme technical depth and logical rigor of Claude 3.5 Sonnet with the professional polish and helpfulness of Google Gemini.
 
 The user prefers: {lang}. Prioritize {lang} in all code examples.
 
-Guidelines:
-- Give clear, working, well-commented code.
-- Explain the WHY behind the code, not just the HOW.
-- For beginners, break down complex concepts step by step.
-- Suggest best practices, mention common pitfalls.
-- Keep responses focused and practical.
-- Use markdown formatting for code blocks."""
+Core Directives:
+- Act as a Senior Staff Engineer. Provide deep technical analysis, not just surface-level code.
+- Offer alternative architectural approaches and explain trade-offs clearly.
+- Code must be production-ready, performant, and include rigorous error handling.
+- Use a sophisticated, precise, yet encouraging professional tone.
+- When explaining complex concepts, use analogies but maintain technical accuracy.
+- Suggest best practices (SOLID, DRY) and warn against common security/performance pitfalls.
+- Use clean, structured Markdown with syntax-highlighted code blocks."""
 
     messages = [SystemMessage(content=system_prompt)]
 
@@ -161,7 +184,7 @@ Guidelines:
             llm = _get_llm(user_id, api_key) # _get_llm defaults to 2.5-flash
             response = llm.invoke(messages)
             
-            if not is_personal: _increment_usage()
+            if not is_personal: _increment_usage(api_key)
             return response.content
             
         except Exception as e:
@@ -188,7 +211,7 @@ Guidelines:
             
             # Use 2.5-Flash-Lite for high-availability fallback
             llm = ChatGoogleGenerativeAI(
-                model="gemini-2.5-flash-lite", 
+                model=AI_MODELS['FALLBACK'], 
                 google_api_key=api_key, 
                 max_retries=0, 
                 timeout=30,
@@ -196,7 +219,7 @@ Guidelines:
             )
             response = llm.invoke(messages)
             
-            if not is_personal: _increment_usage()
+            if not is_personal: _increment_usage(api_key)
             return response.content
         except Exception as e:
             exclude_keys.add(api_key)
