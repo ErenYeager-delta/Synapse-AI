@@ -213,7 +213,7 @@
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
   window.SYNAPSE = {
-      wsUrl:            "ws://{{ request.get_host }}/ws/chat/",
+      wsUrl:            (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/chat/',
       csrfToken:        "{{ csrf_token }}",
       currentSessionId: {% if sessions %}"{{ sessions.0.id }}"{% else %}null{% endif %}
   };

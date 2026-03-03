@@ -193,9 +193,9 @@ class MongoStore:
             s_mongo = self.sessions.find_one({"_id": ObjectId(session_id)})
             if not s_mongo: return
             
-            # Find the shadow user in SQLite
-            u_mongo = self.users.find_one({"_id": ObjectId(s_mongo['user_id'])})
-            u_sql = DjangoUser.objects.get(username=u_mongo['username'])
+            # user_id now stores the username (portable key)
+            u_name = s_mongo['user_id']
+            u_sql = DjangoUser.objects.get(username=u_name)
             
             ChatSession.objects.update_or_create(
                 id=int(str(ObjectId(session_id))[:8], 16) % 2147483647, # Pseudo-ID for SQL
