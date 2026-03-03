@@ -29,6 +29,9 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.up.railway.app',
     'http://127.0.0.1:8000',
 ]
+# FIX: Handle Railway HTTPS Proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
 
 INSTALLED_APPS = [
     'daphne',  # Must be first for ASGI
