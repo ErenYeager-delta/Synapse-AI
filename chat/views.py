@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
 from .mongo_store import mongo_store
@@ -37,6 +37,7 @@ def login_view(request):
     return render(request, 'chat/login.html', {'error': error})
 
 
+@ensure_csrf_cookie
 def signup_view(request):
     if request.user.is_authenticated:
         return redirect('chat')
@@ -50,24 +51,27 @@ def signup_view(request):
 
 @require_POST
 def send_otp_view(request):
-    data     = json.loads(request.body)
-    email    = data.get('email')
-    username = data.get('username')
+    try:
+        data     = json.loads(request.body)
+        email    = data.get('email')
+        username = data.get('username')
 
-    if not email or not username:
-        return JsonResponse({'status': 'error', 'message': 'Email and Username are required.'})
+        if not email or not username:
+            return JsonResponse({'status': 'error', 'message': 'Email and Username are required.'})
 
-    if mongo_store.get_mongo_user(username):
-        return JsonResponse({'status': 'error', 'message': 'Username already taken.'})
-    
-    # Simple email check in MongoDB (not index-optimized but sufficient for beta)
-    if mongo_store.users.find_one({"email": email}):
-        return JsonResponse({'status': 'error', 'message': 'Email already registered.'})
+        if mongo_store.get_mongo_user(username):
+            return JsonResponse({'status': 'error', 'message': 'Username already taken.'})
+        
+        # Simple email check in MongoDB (not index-optimized but sufficient for beta)
+        if mongo_store.users.find_one({"email": email}):
+            return JsonResponse({'status': 'error', 'message': 'Email already registered.'})
 
-    otp = otp_service.generate_otp()
-    otp_service.store_otp(email, otp)
-    # OTP returned so the frontend EmailJS SDK can fill the template
-    return JsonResponse({'status': 'success', 'otp': otp, 'message': 'OTP generated.'})
+        otp = otp_service.generate_otp()
+        otp_service.store_otp(email, otp)
+        # OTP returned so the frontend EmailJS SDK can fill the template
+        return JsonResponse({'status': 'success', 'otp': otp, 'message': 'OTP generated.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': f"Server error: {str(e)}"}, status=500)
 
 
 @require_POST
@@ -101,21 +105,21 @@ def logout_view(request):
 @login_required
 def chat_view(request):
     return render(request, 'chat/index.html', {
-        'sessions': mongo_store.get_sessions(request.user.id),
+        'sessions': mongo_store.get_sessions(request.user.username),
         'user':     request.user,
     })
 
 
 @login_required
 def new_session_view(request):
-    reset_agent(request.user.id)
-    session_id = mongo_store.create_session(request.user.id)
+    reset_agent(request.user.username)
+    session_id = mongo_store.create_session(request.user.username)
     return JsonResponse({'status': 'success', 'session_id': session_id, 'title': 'New Chat'})
 
 
 @login_required
 def session_messages_view(request, session_id):
-    session = mongo_store.get_session(session_id, request.user.id)
+    session = mongo_store.get_session(session_id, request.user.username)
     if not session:
         return JsonResponse({'status': 'error', 'message': 'Session not found.'}, status=404)
     return JsonResponse({'status': 'success',
@@ -125,14 +129,14 @@ def session_messages_view(request, session_id):
 
 @login_required
 def delete_session_view(request, session_id):
-    if mongo_store.delete_session(session_id, request.user.id):
+    if mongo_store.delete_session(session_id, request.user.username):
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error', 'message': 'Session not found.'}, status=404)
 
 
 @login_required
 def get_settings_view(request):
-    s = mongo_store.get_user_settings(request.user.id)
+    s = mongo_store.get_user_settings(request.user.username)
     s.pop('_id', None)
     
     data = {'status': 'success', 'settings': s}
@@ -153,11 +157,11 @@ def update_settings_view(request):
     try:
         data = json.loads(request.body)
         mongo_store.update_user_settings(
-            request.user.id,
+            request.user.username,
             data.get('preferred_language', 'Python'),
             data.get('personal_api_key', '').strip()
         )
-        reset_agent(request.user.id)
+        reset_agent(request.user.username)
         return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
@@ -172,7 +176,7 @@ async def ai_chat_endpoint(request):
         message = data.get('message', '').strip()
         if not message:
             return JsonResponse({'status': 'error', 'message': 'Empty message.'})
-        response = await get_ai_response(request.user.id, message)
+        response = await get_ai_response(request.user.username, message)
         return JsonResponse({'status': 'success', 'response': response})
     except json.JSONDecodeError:
         return JsonResponse({'status': 'error', 'message': 'Invalid JSON.'})

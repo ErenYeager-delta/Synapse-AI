@@ -32,7 +32,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             # Create session if needed
             if not session_id:
-                session_id = await asyncio.to_thread(mongo_store.create_session, self.user.id)
+                session_id = await asyncio.to_thread(mongo_store.create_session, self.user.username)
 
             # Save user message
             await asyncio.to_thread(mongo_store.add_message, session_id, 'user', message)
@@ -53,7 +53,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             # Run AI — centralized rotation in ai_engine handles keys
             try:
-                agent    = get_or_create_agent(self.user.id, session_id)
+                agent    = get_or_create_agent(self.user.username, session_id)
                 response = await asyncio.to_thread(agent.run, message)
             except Exception as e:
                 err_msg = str(e)
@@ -69,7 +69,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self._stream_response(response, session_id)
 
             # --- Professional AI Title Automation ---
-            session = await asyncio.to_thread(mongo_store.get_session, session_id, self.scope['user'].id)
+            session = await asyncio.to_thread(mongo_store.get_session, session_id, self.user.username)
             if session and session.get('title') == 'New Chat':
                 from .ai_engine import generate_title
                 # Generate a smart title based on user intent
