@@ -2,7 +2,7 @@
 # REMOVED: djongo, google-generativeai (deprecated)
 
 Django==4.2.29
-sqlparse==0.5.3
+sqlparse==0.5.4
 
 # MongoDB via PyMongo ONLY (no djongo)
 pymongo==4.11.1
