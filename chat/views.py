@@ -18,6 +18,10 @@ def get_usage_view(request):
     return JsonResponse({'status': 'success', 'remaining': remaining, 'total': total})
 
 
+def manifest_view(request):
+    return render(request, 'chat/manifest.json', content_type='application/json')
+
+
 def landing_view(request):
     return render(request, 'chat/landing.html')
 
