@@ -137,6 +137,8 @@ except Exception:
     CHANNEL_LAYERS = {
         'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'},
     }
+    # Persistence Fallback: Use LocMem for sessions if Redis is down
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -157,6 +159,8 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+# Security: Prevent 500 crashes if an asset is missing in manifest
+WHITENOISE_MANIFEST_STRICT = False
 
 LOGIN_URL           = '/login/'
 LOGIN_REDIRECT_URL  = '/'
