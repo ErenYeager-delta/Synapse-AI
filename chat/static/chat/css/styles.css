@@ -31,12 +31,11 @@
 }
 
 html {
-  height: 100%;
   scroll-behavior: smooth;
+  /* Remove height: 100% to let browser handle scroll naturally */
 }
 
 body {
-  min-height: 100%;
   margin: 0;
   padding: 0;
   background: var(--bg-darker);
@@ -46,19 +45,32 @@ body {
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   
-  /* Robust Mobile Scroll Support */
-  overflow-y: auto;
+  /* Restoration of Natural Viewport Scrolling */
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden; /* Prevent horizontal jitter while allowing vertical scroll */
+}
+
+/* ─── Landing / Auth Page Wrapper — Guarantees scrolling ──── */
+.landing-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  overflow-y: auto !important;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; /* Momentum scrolling on iOS/Samsung */
+  overscroll-behavior-y: auto;
+  touch-action: pan-y pinch-zoom; /* Explicitly allow vertical swipe */
   position: relative;
 }
 
-/* ─── Layout ────────────────────────────────────────── */
+/* ─── Layout (Dashboard Only) ───────────────────────── */
 .app-container {
   display: flex;
   height: 100vh;
   width: 100vw;
   position: relative;
   overflow: hidden; /* Maintain fixed-app UI for dashboard */
+  touch-action: none; /* Dashboard handles its own scroll */
 }
 
 .mesh-bg {
@@ -695,6 +707,7 @@ select.form-input {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch; /* Momentum scroll */
   overscroll-behavior-y: contain;   /* Prevent pull-to-refresh */
+  touch-action: pan-y;              /* Allow vertical swipe in chat */
 }
 
 /* Silk Scrollbar - Professional & Visible */
