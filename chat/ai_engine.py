@@ -156,8 +156,7 @@ Guidelines:
         if not api_key: break
         
         try:
-            masked = f"{api_key[:4]}...{api_key[-4:]}"
-            logger.info(f"Attempting 2.5-Flash | Key: {masked} | {attempt+1}/{all_keys_count}")
+            logger.info(f"Attempting Stage 1 Model | Key #{attempt+1}/{all_keys_count}")
             
             llm = _get_llm(user_id, api_key) # _get_llm defaults to 2.5-flash
             response = llm.invoke(messages)
@@ -168,7 +167,7 @@ Guidelines:
         except Exception as e:
             err_str = str(e).lower()
             if any(x in err_str for x in ["429", "rate_limit", "quota", "exhausted", "too many requests"]):
-                logger.warning(f"Key {api_key[:6]} limit hit (2.5). Rotating...")
+                logger.warning(f"Key #{attempt+1} limit hit. Rotating...")
                 exclude_keys.add(api_key)
                 last_error = e
                 time.sleep(1)
@@ -185,8 +184,7 @@ Guidelines:
         if not api_key: break
         
         try:
-            masked = f"{api_key[:4]}...{api_key[-4:]}"
-            logger.info(f"Attempting 2.5-Flash-Lite | Key: {masked} | {attempt+1}/{all_keys_count}")
+            logger.info(f"Attempting Stage 2 Model (Fallback) | Key #{attempt+1}/{all_keys_count}")
             
             # Use 2.5-Flash-Lite for high-availability fallback
             llm = ChatGoogleGenerativeAI(

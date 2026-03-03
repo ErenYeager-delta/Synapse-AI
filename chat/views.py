@@ -1,5 +1,6 @@
 """Views for Synapse Chat."""
-import json, asyncio
+import json, asyncio, logging
+logger = logging.getLogger(__name__)
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
@@ -75,7 +76,8 @@ def send_otp_view(request):
         # OTP returned so the frontend EmailJS SDK can fill the template
         return JsonResponse({'status': 'success', 'otp': otp, 'message': 'OTP generated.'})
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': f"Server error: {str(e)}"}, status=500)
+        logger.error(f"OTP Generation Error: {e}", exc_info=True)
+        return JsonResponse({'status': 'error', 'message': 'An internal error occurred while generating OTP.'}, status=500)
 
 
 @require_POST
@@ -98,7 +100,8 @@ def verify_signup_view(request):
         mongo_store.create_mongo_user(username=username, email=email, password=password)
         return JsonResponse({'status': 'success', 'message': 'Account created!'})
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)})
+        logger.error(f"User Creation Error: {e}", exc_info=True)
+        return JsonResponse({"status": "error", "message": "Could not create account."}, status=500)
 
 
 def logout_view(request):
@@ -168,7 +171,8 @@ def update_settings_view(request):
         reset_agent(request.user.username)
         return JsonResponse({'status': 'success'})
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)})
+        logger.error(f"Settings Update Error: {e}", exc_info=True)
+        return JsonResponse({"status": "error", "message": "Failed to update settings."}, status=500)
 
 
 @csrf_exempt
@@ -185,4 +189,5 @@ async def ai_chat_endpoint(request):
     except json.JSONDecodeError:
         return JsonResponse({'status': 'error', 'message': 'Invalid JSON.'})
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)})
+        logger.error(f"AI Chat Error: {e}", exc_info=True)
+        return JsonResponse({"status": "error", "message": "The AI engine encountered an error."}, status=500)
