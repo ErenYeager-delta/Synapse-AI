@@ -12,6 +12,11 @@ _env_path = _Path(__file__).resolve().parent.parent / '.env'
 load_dotenv(dotenv_path=_env_path, override=True)
 
 import sys as _sys
+_key = os.getenv('GEMINI_API_KEY', '')
+print(f"[Synapse] .env loaded from: {_env_path}")
+print(f"[Synapse] .env file exists: {_env_path.exists()}")
+print(f"[Synapse] GEMINI_API_KEY loaded: {'YES (' + _key[:8] + '...)' if _key else 'NO - .env not found!'}")
+
 # Environment loaded securely.
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,6 +24,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.railway.app',
+    'https://*.up.railway.app',
+    'http://127.0.0.1:8000',
+]
 
 INSTALLED_APPS = [
     'daphne',  # Must be first for ASGI
@@ -34,6 +44,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
