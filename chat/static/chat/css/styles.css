@@ -34,7 +34,9 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overflow: hidden; /* Desktop Lock down */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
   background: var(--bg-darker);
   background-image: var(--bg-gradient);
   color: var(--text-primary);
@@ -680,6 +682,8 @@ select.form-input {
   flex-direction: column;
   gap: 16px;
   scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* Momentum scroll */
+  overscroll-behavior-y: contain;   /* Prevent pull-to-refresh */
 }
 
 /* Silk Scrollbar - Professional & Visible */
@@ -1130,6 +1134,13 @@ select.form-input {
   }
   .message-bubble {
     max-width: 85%;
+  }
+  .sessions-list {
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Soften root lock for mobile touch engine */
+  html, body {
+    overflow: clip; 
   }
 }
 
