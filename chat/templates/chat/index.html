@@ -1,0 +1,222 @@
+{% extends 'chat/base.html' %} {% load static %} {% block title %}Synapse AI
+&mdash; Code Assistant{% endblock %} {% block extra_head %}
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"
+/>
+{% endblock %} {% block body %}
+<div class="mesh-bg"></div>
+
+<div class="app-container">
+  <!-- Sidebar Overlay (mobile) -->
+  <div
+    id="sidebar-overlay"
+    class="sidebar-overlay"
+    onclick="closeSidebarMobile()"
+  ></div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <a href="/" class="brand">&#9889; <span>Synapse</span></a>
+      <button class="btn-new-chat" onclick="newChat()">+ New Chat</button>
+    </div>
+    <div class="sessions-list">
+      {% for session in sessions %}
+      <div
+        class="session-item {% if forloop.first %}active{% endif %}"
+        data-session-id="{{ session.id }}"
+        onclick="loadSession('{{ session.id }}')"
+      >
+        <span class="session-title">{{ session.title }}</span>
+        <button
+          class="btn-delete-session"
+          onclick="event.stopPropagation(); deleteSession('{{ session.id }}')"
+          title="Delete"
+        >
+          &#215;
+        </button>
+      </div>
+      {% empty %}
+      <p class="no-sessions">No chats yet. Start one!</p>
+      {% endfor %}
+    </div>
+    <div class="sidebar-footer">
+      <div id="usage-info" class="usage-info" style="display: none">
+        <div class="usage-label">Chat Availability</div>
+        <div class="usage-bar-container">
+          <div id="usage-bar" class="usage-bar" style="width: 100%"></div>
+        </div>
+        <div id="usage-text" class="usage-text">Calculating...</div>
+      </div>
+      <div class="user-info">
+        <span class="user-avatar">{{ user.username|first|upper }}</span>
+        <div class="user-meta">
+            <span class="user-name">{{ user.username }}</span>
+            {% if user.is_superuser %}
+                <span class="user-badge super">Superuser</span>
+            {% elif user.is_staff %}
+                <span class="user-badge staff">Staff</span>
+            {% endif %}
+        </div>
+      </div>
+      <div class="sidebar-actions">
+        <button class="btn-icon" onclick="openSettings()" title="Settings">
+          &#9881;&#65039;
+        </button>
+        {% if user.is_staff %}
+        <a href="/admin/" class="btn-icon" title="Admin Panel">&#128736;&#65039;</a>
+        {% endif %}
+        <a href="/logout/" class="btn-icon" title="Logout">&#128682;</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Chat Area -->
+  <main class="chat-main">
+    <div class="chat-header">
+      <button class="btn-hamburger" onclick="toggleSidebar()">&#9776;</button>
+      <h1 id="chat-title" class="chat-title">Synapse AI</h1>
+    </div>
+
+    <div id="messages-container" class="messages-container">
+      <div id="welcome-screen" class="welcome-screen">
+        <div class="welcome-logo">&#9889;</div>
+        <h2 class="welcome-title">How can I help you code today?</h2>
+        <p class="welcome-subtitle">
+          Beginner-friendly assistant for your coding journey.
+        </p>
+        <div class="quick-prompts">
+          <button
+            class="quick-prompt-btn"
+            onclick="quickPrompt('Explain Python decorators with example')"
+          >
+            Python Decorators
+          </button>
+          <button
+            class="quick-prompt-btn"
+            onclick="quickPrompt('How do I build a REST API with Django?')"
+          >
+            Django REST API
+          </button>
+          <button
+            class="quick-prompt-btn"
+            onclick="quickPrompt('Fix this JavaScript async/await error')"
+          >
+            Fix JS Error
+          </button>
+          <button
+            class="quick-prompt-btn"
+            onclick="quickPrompt('Explain machine learning in simple terms')"
+          >
+            ML Basics
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-wrapper">
+        <textarea
+          id="message-input"
+          class="message-input"
+          placeholder="Ask me anything about code&#8230;"
+          rows="1"
+          onkeydown="handleKeyDown(event)"
+          oninput="autoResize(this)"
+        ></textarea>
+        <button id="btn-send" class="btn-send" onclick="sendMessage()">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+      <p class="input-hint">
+        Press Enter to send &middot; Shift+Enter for new line
+      </p>
+    </div>
+  </main>
+</div>
+
+<!-- Settings Modal -->
+<div id="settings-modal" class="modal" style="display: none">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">&#9881;&#65039; Settings</h2>
+      <button class="btn-close-modal" onclick="closeSettings()">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Preferred Language / Framework</label>
+        <p class="form-hint">AI will prioritize this language for all logic.</p>
+        <select id="setting-language" class="form-input">
+          <option value="Python">Python</option>
+          <option value="JavaScript">JavaScript</option>
+          <option value="TypeScript">TypeScript</option>
+          <option value="Java">Java</option>
+          <option value="C++">C++</option>
+          <option value="React">React</option>
+          <option value="Django">Django</option>
+          <option value="Node.js">Node.js</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Personal Gemini API Key (BYOK)</label>
+        <p class="form-hint">Unlock unlimited queries by using your own key.</p>
+        <input
+          type="password"
+          id="setting-api-key"
+          class="form-input"
+          placeholder="AIza..."
+        />
+      </div>
+
+      {% if user.is_staff %}
+      <div class="form-group admin-only-section" style="border-top: 1px solid var(--border); padding-top: 20px; margin-top: 20px;">
+        <label class="form-label" style="color:var(--accent-cyan);">&#128736; Admin Diagnostics</label>
+        <div class="admin-stats-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px;">
+            <div class="stat-box" style="background:rgba(0,0,0,0.2); padding:12px; border-radius:8px; border:1px solid var(--border);">
+                <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Total Users</div>
+                <div id="admin-total-users" style="font-size:18px; font-weight:700; color:var(--text-primary);">--</div>
+            </div>
+            <div class="stat-box" style="background:rgba(0,0,0,0.2); padding:12px; border-radius:8px; border:1px solid var(--border);">
+                <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Sessions</div>
+                <div id="admin-total-sessions" style="font-size:18px; font-weight:700; color:var(--text-primary);">--</div>
+            </div>
+        </div>
+        <a href="/admin/" target="_blank" class="btn-secondary" style="margin-top:16px; display:block; text-align:center; text-decoration:none; padding:10px;">Open Master Admin Panel &rarr;</a>
+      </div>
+      {% endif %}
+    </div>
+    <div class="modal-footer">
+      <button
+        id="btn-save-settings"
+        class="btn-primary"
+        onclick="saveSettings()"
+      >
+        Save Changes
+      </button>
+      <button class="btn-secondary" onclick="closeSettings()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  window.SYNAPSE = {
+      wsUrl:            "ws://{{ request.get_host }}/ws/chat/",
+      csrfToken:        "{{ csrf_token }}",
+      currentSessionId: {% if sessions %}"{{ sessions.0.id }}"{% else %}null{% endif %}
+  };
+</script>
+<script src="{% static 'chat/js/chat.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,33 @@
+# Synapse AI — Fixed Dependencies (Python 3.12+)
+# REMOVED: djongo, google-generativeai (deprecated)
+
+Django==4.2.28
+sqlparse==0.5.3
+
+# MongoDB via PyMongo ONLY (no djongo)
+pymongo==4.7.3
+dnspython==2.7.0
+
+# Redis & Caching
+django-redis==5.4.0
+redis==5.0.8
+
+# Django Channels — WebSockets + ASGI
+daphne==4.1.2
+channels==4.1.0
+channels-redis==4.2.1
+
+# LangChain & Gemini AI
+langchain==0.3.27
+langchain-core==0.3.83
+langchain-google-genai==2.1.2
+langchain-community==0.3.31
+google-genai>=1.0.0
+duckduckgo-search==8.1.1
+
+# Security
+cryptography>=42.0.0
+
+# Utilities
+python-dotenv==1.2.2
+requests==2.32.5

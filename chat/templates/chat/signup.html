@@ -1,0 +1,237 @@
+{% extends 'chat/base.html' %}
+{% load static %}
+{% block title %}Sign Up &mdash; Synapse AI{% endblock %}
+
+{% block body %}
+<div class="mesh-bg"></div>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <a href="/" class="brand" style="justify-content:center;">&#9889; <span>Synapse</span> AI</a>
+            <p class="auth-subtitle">Join the curated beta and start coding.</p>
+        </div>
+
+        <!-- Step 1 -->
+        <div id="step-1">
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" id="username" class="form-input"
+                       placeholder="vigneshwaran (no spaces)"
+                       oninput="validateUsername(this)" required>
+                <small id="username-hint" style="color:var(--text-muted);font-size:12px;margin-top:4px;display:block;">
+                    Only letters, numbers, underscore (_) and hyphen (-) allowed. No spaces.
+                </small>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" id="email" class="form-input" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="password" class="form-input" placeholder="Min 8 characters" required>
+            </div>
+            <div id="step1-error" class="error-message" style="display:none;"></div>
+            <button id="btn-send-otp" class="btn-primary" onclick="sendOTP(event)">Send OTP &#8594;</button>
+        </div>
+
+        <!-- Step 2 -->
+        <div id="step-2" style="display:none;">
+            <div style="margin-bottom:20px;padding:14px 16px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:6px;">
+                <p style="color:#10B981;font-size:14px;">&#128231; OTP sent to <strong id="otp-email-display"></strong></p>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Enter 6-Digit OTP</label>
+                <input type="text" id="otp-input" class="form-input"
+                       placeholder="1 2 3 4 5 6"
+                       maxlength="6" inputmode="numeric"
+                       style="letter-spacing:10px;font-size:22px;text-align:center;font-weight:700;" required>
+            </div>
+            <div id="step2-error" class="error-message" style="display:none;"></div>
+            <button id="btn-verify-otp" class="btn-primary" onclick="verifyOTP(event)">Create Account &#8594;</button>
+            <button class="btn-secondary" style="margin-top:10px;" onclick="goBack()">&#8592; Back</button>
+        </div>
+
+        <div class="auth-footer" style="margin-top:24px;text-align:center;">
+            <p>Already have an account? <a href="/login/" class="auth-link">Sign In</a></p>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+const EMAILJS_PUBLIC_KEY  = "{{ emailjs_public_key }}";
+const EMAILJS_SERVICE_ID  = "{{ emailjs_service_id }}";
+const EMAILJS_TEMPLATE_ID = "{{ emailjs_template_id }}";
+
+if (EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY !== "None") {
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+}
+
+// ── Validate username as user types ──────────────────────────
+function validateUsername(input) {
+    const val     = input.value;
+    const valid   = /^[a-zA-Z0-9_-]*$/.test(val);
+    const hint    = document.getElementById('username-hint');
+    if (!valid) {
+        input.style.borderColor = 'var(--accent-rose)';
+        hint.style.color        = 'var(--accent-rose)';
+        hint.textContent        = '✗ No spaces or special characters allowed!';
+        // Auto-fix: remove invalid characters silently
+        input.value = val.replace(/[^a-zA-Z0-9_-]/g, '');
+    } else if (val.length > 0) {
+        input.style.borderColor = 'var(--accent-cyan)';
+        hint.style.color        = '#10B981';
+        hint.textContent        = '✓ Username looks good!';
+    } else {
+        input.style.borderColor = '';
+        hint.style.color        = 'var(--text-muted)';
+        hint.textContent        = 'Only letters, numbers, underscore (_) and hyphen (-) allowed. No spaces.';
+    }
+}
+
+// ── Step 1: Send OTP ─────────────────────────────────────────
+async function sendOTP(event) {
+    const btn      = document.getElementById('btn-send-otp');
+    const username = document.getElementById('username').value.trim();
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const errBox   = document.getElementById('step1-error');
+
+    errBox.style.display = 'none';
+
+    // ── Client-side validation ────────────────────────────────
+    if (!username || !email || !password) {
+        showError(errBox, 'All three fields are required.'); return;
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+        showError(errBox, 'Username can only contain letters, numbers, underscore and hyphen. No spaces allowed.'); return;
+    }
+    if (username.length < 3) {
+        showError(errBox, 'Username must be at least 3 characters.'); return;
+    }
+    if (username.length > 30) {
+        showError(errBox, 'Username must be 30 characters or less.'); return;
+    }
+    if (password.length < 8) {
+        showError(errBox, 'Password must be at least 8 characters.'); return;
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+        showError(errBox, 'Please enter a valid email address.'); return;
+    }
+
+    setBtn(btn, 'Checking...', true);
+
+    // ── Call Django backend ───────────────────────────────────
+    let backendData;
+    try {
+        const res   = await fetch('/api/auth/send-otp/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+            body: JSON.stringify({ username, email })
+        });
+        backendData = await res.json();
+    } catch (e) {
+        showError(errBox, 'Network error. Is the server running?');
+        setBtn(btn, 'Send OTP →', false); return;
+    }
+
+    if (backendData.status !== 'success') {
+        showError(errBox, backendData.message || 'Server error.');
+        setBtn(btn, 'Send OTP →', false); return;
+    }
+
+    // ── Send OTP via EmailJS ──────────────────────────────────
+    if (!EMAILJS_PUBLIC_KEY || EMAILJS_PUBLIC_KEY === 'None' || EMAILJS_PUBLIC_KEY === '') {
+        // Dev mode: show OTP in alert (no EmailJS needed)
+        showStep2(email);
+        setTimeout(() => alert('DEV MODE — OTP: ' + backendData.otp), 200);
+        return;
+    }
+
+    setBtn(btn, 'Sending email...', true);
+    try {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+            email:    email,         // matches {{email}} in your EmailJS template
+            passcode: String(backendData.otp), // matches {{passcode}} in your EmailJS template
+            app_name: 'Synapse AI',
+            from_name: 'Synapse AI'
+        });
+        showStep2(email);
+    } catch (e) {
+        console.error('EmailJS error:', e);
+        const msg = (e && e.text) ? e.text : (e && e.message) ? e.message : JSON.stringify(e);
+        showError(errBox, 'EmailJS error: ' + msg + ' — Check your EmailJS keys in .env');
+        setBtn(btn, 'Send OTP →', false);
+    }
+}
+
+function showStep2(email) {
+    document.getElementById('otp-email-display').textContent = email;
+    document.getElementById('step-1').style.display = 'none';
+    document.getElementById('step-2').style.display = 'block';
+    setTimeout(() => document.getElementById('otp-input').focus(), 100);
+}
+
+// ── Step 2: Verify OTP & Create Account ──────────────────────
+async function verifyOTP(event) {
+    const btn      = document.getElementById('btn-verify-otp');
+    const otp      = document.getElementById('otp-input').value.trim();
+    const email    = document.getElementById('email').value.trim();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const errBox   = document.getElementById('step2-error');
+
+    errBox.style.display = 'none';
+
+    if (!otp || otp.length !== 6) {
+        showError(errBox, 'Enter the 6-digit OTP from your email.'); return;
+    }
+
+    setBtn(btn, 'Creating account...', true);
+
+    try {
+        const res  = await fetch('/api/auth/verify-signup/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+            body: JSON.stringify({ username, email, password, otp })
+        });
+        const data = await res.json();
+
+        if (data.status === 'success') {
+            btn.textContent = '✓ Account created! Redirecting...';
+            btn.style.background = '#059669';
+            setTimeout(() => window.location.href = '/login/', 1500);
+        } else {
+            showError(errBox, data.message || 'OTP verification failed. Try again.');
+            setBtn(btn, 'Create Account →', false);
+        }
+    } catch (e) {
+        showError(errBox, 'Network error. Please try again.');
+        setBtn(btn, 'Create Account →', false);
+    }
+}
+
+function goBack() {
+    document.getElementById('step-2').style.display = 'none';
+    document.getElementById('step-1').style.display = 'block';
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function showError(box, msg) {
+    box.innerHTML = '&#9888; ' + msg;
+    box.style.display = 'flex';
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function setBtn(btn, label, disabled) {
+    btn.disabled    = disabled;
+    btn.textContent = label;
+}
+function getCookie(name) {
+    const value = '; ' + document.cookie;
+    const parts = value.split('; ' + name + '=');
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+</script>
+{% endblock %}
