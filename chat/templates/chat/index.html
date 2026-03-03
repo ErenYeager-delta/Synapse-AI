@@ -257,8 +257,16 @@
 {% endblock %}
 
 {% block extra_scripts %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script 
+      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" 
+      integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" 
+      crossorigin="anonymous"
+    ></script>
+    <script 
+      src="https://cdn.jsdelivr.net/npm/marked@12.0.1/marked.min.js" 
+      integrity="sha256-y0zy7+/SsfYCvy8n1ZT8CiY0DSZhtgzd/KrHp7kmGIY=" 
+      crossorigin="anonymous"
+    ></script>
     <script>
       window.SYNAPSE = {
         csrfToken: "{{ csrf_token }}",

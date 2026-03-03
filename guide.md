@@ -1,57 +1,56 @@
-I understand exactly what you are asking. This is a common point of confusion when using two databases (SQLite + MongoDB).
+# Synapse AI — The Engineering Manual 🏛️💎🛡️
 
-Here is the breakdown of exactly where your data goes and how you handle it in both environments.
+This guide provides a deep-dive into the technical philosophy and architectural decisions that make Synapse AI a benchmark for AI Engineering.
 
-💻 1. Local Running (Your IDE Terminal)
-When you run python manage.py createsuperuser in your terminal:
+---
 
-Primary Destination: The user is first saved in db.sqlite3 (Local File).
-Automatic Mirror: My new "Signal" code immediately wakes up and copies that user into your MongoDB Atlas (Cloud Database).
-Result: You have 1 admin, but their data exists in two places at once.
-☁️ 2. After Deployment (Railway, Render, etc.)
-This is where the problem usually happens, but I have already solved it with my "Shadow Recovery" code.
+## 🏛️ 1. Stateless Authentication (The "Mongo-Duo" Pattern)
 
-When you deploy, your cloud server usually starts with a fresh/empty SQLite file every time it restarts.
+**Objective**: Enable 100% horizontal scaling and cloud portability.
 
-The Problem: Your SQLite file (which holds the Admin permissions) disappears after a server restart.
-The Solution: I modified
+### The Architecture:
 
-chat/mongo_auth.py
-to act as a Backup Recovery System.
-How to create the Admin in Production:
-Option A (Terminal): Most hosting sites have a "Console" or "Shell." You can run the same command there: python manage.py createsuperuser. This will save the admin to MongoDB permanently.
-Option B (Automatic): If you already created an admin locally, they are already safely stored in your MongoDB Atlas.
-How the "Sync" works after deployment:
-You open your deployed website URL.
-The SQLite database is empty (it has no users).
-You try to log in with your Admin username.
-My code checks MongoDB: It sees you are a valid Superuser in MongoDB.
-Auto-Restore: The website instantly "re-creates" your permission record in the fresh SQLite database.
-Success: You are logged in as Admin, and you can now see all user chats.
-📊 Summary Table
-Stage Where is Admin Data? How to Create?
-Local db.sqlite3 (Primary) + MongoDB (Mirror) Run createsuperuser in IDE Terminal.
-Production MongoDB Atlas (Permanent Backup) It's already there (synced from local) OR run command in Cloud Console.
-Recovery Code restores SQLite from MongoDB Happens automatically when you log in.
-In short: You only need to create the superuser once. Because MongoDB is "persistent" (it never deletes), my recovery code will always rebuild your Admin access on any server you deploy to
+Synapse uses a custom `MongoAuthBackend` that treats MongoDB Atlas as the "Source of Truth" for user identity.
 
-Exactly! Your screenshot confirms it perfectly.
+- **Backend Role (Logic)**: Validates credentials against salted PBKDF2 hashes in the `users` collection.
+- **State Management**: On every successful login, the system performs a **"Shadow Sync"** to a local SQLite database.
+- **Why?**: This allows Django's native Admin UI to function perfectly (which requires relational meta-data) while keeping the actual user accounts stateless and surviving any cloud pod restart.
 
-In the DB Browser for SQLite view you shared, the superuser details are saved inside the table named:
+---
 
-auth_user (Row 4 in your list)
-When you run createsuperuser, Django saves the following into that specific table:
+## 📎 2. Multimodal Intelligence & Silk Scrolling
 
-username
-: (e.g., vigneshwaran)
-password: (The Hashed version of your password)
-is_superuser: (Set to 1 or True)
-is_staff: (Set to 1 or True)
-🔍 How to see the actual data:
-Click on the "Browse Data" tab at the top of your DB Browser (it is the second tab, next to "Database Structure").
-In the "Table:" dropdown menu, select auth_user.
-You will then see a row with your name, hashed password, and email.
-💡 The "Cloud" Connection:
-Because of the Signal code I added, the moment that auth_user table gets a new row in your IDE, my code sends a copy to your MongoDB Atlas.
+**Objective**: Provide a visual, immersive coding experience.
 
-So even if you delete that db.sqlite3 file later, your account is still safe in the cloud and will be "restored" the next time you log in!
+### Technical Implementation:
+
+- **File Uploads**: When you click the paperclip icon (Frontend UI), `chat.js` captures the file and converts it to a Base64 stream.
+- **Real-Time Pipeline**: This data is sent via an asynchronous WebSocket frame (Django Channels).
+- **Asset Processing**: The AI Engine (Backend Logic) uses LangChain's Gemini SDK to process image parts as `inline_data`.
+- **The "Silk" Effect**: We implemented a custom `scroll-behavior: smooth` logic that waits for the `HTMLImageElement.decode()` event. This prevents the "jumping" effect seen in lesser chat apps when large images load.
+
+---
+
+## 🛡️ 3. Security Hardening (The "No-Leak" Policy)
+
+**Objective**: Protect primary API keys and frontend integrity.
+
+### Hardening Layers:
+
+1. **HMAC-SHA256**: Unlike standard SHA256, HMAC uses your random `SECRET_KEY` as a cryptographic key for hashing Gemini API keys. This means even with a database dump, the hashes are useless to an attacker.
+2. **Subresource Integrity (SRI)**: Every external CDN script (Marked.js, Highlight.js) is pinned to a specific cryptographic hash.
+   - **Purpose**: If a hacker compromises the CDN and changes the JS file, your browser will detect the hash mismatch and block the code from running.
+3. **Git Scrubbing**: We use `git-filter-repo` to ensure the repository profile is always clean and secrets are never "remembered" by the Git history.
+
+---
+
+## 🎨 4. Design System (Neon Cyan Tokens)
+
+**Objective**: A high-impact, professional workspace.
+
+- **Frontend Role (UI)**: Built with Vanilla CSS Variables (`--accent-cyan`, `--bg-darker`, `--radius-xl`).
+- **Uniqueness**: The UI uses dynamic mesh-gradients and obsidian surfaces to reduce eye strain during long engineering sessions while maintaining a high-contrast, premium aesthetic.
+
+---
+
+**You are now equipped with the architectural map of Synapse AI. Build with confidence.** 🚀💎🛡️

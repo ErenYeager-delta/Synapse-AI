@@ -3,11 +3,16 @@ AI Engine — Direct Gemini chat via LangChain (no agent wrapper).
 FIXED: Removed AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION which breaks
        with Gemini. Now uses simple direct LLM call with conversation history.
 """
-import random, logging, hashlib
+import random, logging, hashlib, hmac
 from threading import Lock
 from django.conf import settings
 from django.core.cache import cache
 from .mongo_store import mongo_store
+
+def _secure_hash(data: str) -> str:
+    """Generate a secure salted hash for API keys."""
+    salt = settings.SECRET_KEY.encode()
+    return hmac.new(salt, data.encode(), hashlib.sha256).hexdigest()[:12]
 
 # --- 2026 ROADMAP CONFIG ---
 AI_MODELS = {
@@ -69,7 +74,7 @@ def get_remaining_chats():
     total_capacity = len(app_keys) * 1500
 
     for i, key in enumerate(app_keys):
-        k_hash = hashlib.sha256(key.encode()).hexdigest()[:8]
+        k_hash = _secure_hash(key)
         usage_key = f"synapse:usage:{today}:{k_hash}"
         usage = cache.get(usage_key, 0)
         remaining = max(0, 1500 - usage)
@@ -89,7 +94,7 @@ def _increment_usage(api_key):
     if not api_key: return
     import datetime
     today = datetime.date.today().isoformat()
-    k_hash = hashlib.sha256(api_key.encode()).hexdigest()[:8]
+    k_hash = _secure_hash(api_key)
     usage_key = f"synapse:usage:{today}:{k_hash}"
     try:
         cache.get_or_set(usage_key, 0, 86400)

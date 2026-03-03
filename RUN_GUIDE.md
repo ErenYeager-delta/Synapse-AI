@@ -1,78 +1,85 @@
 # Synapse AI — Terminal & Execution Guide 🚀
 
-Use this guide as a quick reference for running your AI Coding Assistant in your IDE terminal (VS Code, PowerShell, etc.).
+Use this guide as a quick reference for running and maintaining your AI Coding Assistant. Every command is optimized for the Synapse architecture.
 
 ---
 
-## 📂 1. Directory Setup
+## 📂 1. Core Execution Commands
 
-Before running any commands, ensure your terminal is in the correct directory:
+### A. Development (With Auto-Reload)
 
-```powershell
-cd "c:\Users\VIGNESH\Downloads\Synapse"
-```
-
----
-
-## ⚡ 2. Execution Methods (Pros & Cons)
-
-### Method A: Standard Development Server
-
-**Command:**
+**Purpose**: Best for active coding. Automatically restarts the server when you save changes.
 
 ```powershell
+# Purpose: Launches the standard Django dev server.
+# Why: Validates template logic and Python code changes instantly.
 python manage.py runserver
 ```
 
-| Pros ✅                                                        | Cons ❌                                                                    |
-| :------------------------------------------------------------- | :------------------------------------------------------------------------- |
-| **Auto-Reload**: Instantly updates when you save a file.       | **Slower WebSockets**: Can feel slightly laggy during AI "Thinking" state. |
-| **Debugging**: Shows full error logs directly in the terminal. | **Single-Threaded**: Not built for high-concurrency production.            |
-| **Simplicity**: No extra dependencies needed.                  |                                                                            |
+### B. High-Performance (DAPHNE)
 
----
-
-### Method B: Professional Performance (DAPHNE)
-
-**Recommended for the best Chat experience.**
-**Command:**
+**Purpose**: Recommended for active chat sessions. Provides the most responsive WebSocket streaming.
 
 ```powershell
+# Purpose: Runs the app using the ASGI (Asynchronous Server Gateway Interface).
+# Why: Daphne is required for WebSockets to stream AI responses token-by-token without lag.
 daphne -b 127.0.0.1 -p 8000 synapse_project.asgi:application
 ```
 
-| Pros ✅                                                                 | Cons ❌                                                              |
-| :---------------------------------------------------------------------- | :------------------------------------------------------------------- |
-| **Ultra-Fast WebSockets**: No lag between User message and AI Response. | **No Auto-Reload**: You must restart it manually after editing code. |
-| **Real Production Core**: This is how the app runs on Railway/Render.   | **Complex Logs**: Error logs are more condensed and harder to read.  |
-| **Asynchronous**: Handles multiple chat strands simultaneously.         |                                                                      |
+---
+
+## ⚡ 2. Database & Auth Maintenance
+
+### User Promotion (Cloud & Local)
+
+**Purpose**: Grant administrative access to an account stored in MongoDB.
+
+```powershell
+# Purpose: Elevates a standard user to Staff/Superuser status.
+# Why: Synapse uses a custom MongoDB Auth backend; this script syncs permissions to the SQLite shadow models for Admin UI access.
+python promote_user.py <username>
+```
+
+### Shadow Sync (Mass Recovery)
+
+**Purpose**: Ensure all MongoDB users are represented in the local SQLite "Shadow" database.
+
+```powershell
+# Purpose: Scans MongoDB and creates missing records in SQLite.
+# Why: Django's Admin panel requires a local record to manage permissions; this keeps both databases perfectly aligned.
+python mass_sync.py
+```
 
 ---
 
-## 🛠️ 3. Essential Maintenance Commands
+## 🛡️ 3. Security & Environment Setup
 
-### Create Admin / Owner
+### Environment Refresh
 
-Run this to give your user account full control over the system:
+**Purpose**: Update your local configuration after changes to `.env.example`.
 
 ```powershell
-python manage.py createsuperuser
+# Purpose: Copies the template to a localized secret file.
+# Why: Keeps your API keys and Mongo URIs safe from accidental Git commits.
+cp .env.example .env
 ```
 
-### Update System Dependencies
+### Dependency Hardening
 
-If you add new libraries or sync from GitHub, run this:
+**Purpose**: Ensure your environment matches the production-locked requirements.
 
 ```powershell
+# Purpose: Installs specific versions of PyMongo, LangChain, and Django Channels.
+# Why: Prevents "version drift" errors and ensures that security patches (like SRI support) are active.
 pip install -r requirements.txt
 ```
 
 ---
 
-## 📅 4. Your Daily Workflow
+## 📅 4. Mission-Ready Workflow
 
-1. **Open IDE** (VS Code).
-2. **Open Terminal** (Ctrl + `).
-3. **Move to Folder**: `cd "c:\Users\VIGNESH\Downloads\Synapse"`
-4. **Run Server**: `python manage.py runserver`
-5. **Start Chatting**: Visit [http://127.0.0.1:8000](http://127.0.0.1:8000)
+1. **Verify Connection**: `ping mongodb-atlas-cluster` (Check cloud availability).
+2. **Boot Engine**: `python manage.py runserver` (Start the core logic).
+3. **Analyze**: Head to `http://127.0.0.1:8000` and start your multimodal engineering session.
+
+**Synapse AI is mission-ready. The terminal is your cockpit.** 🚀💎🛡️
