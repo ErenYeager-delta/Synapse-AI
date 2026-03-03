@@ -29,9 +29,23 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.up.railway.app',
     'http://127.0.0.1:8000',
 ]
-# FIX: Handle Railway HTTPS Proxy
+# FIX: Handle Railway HTTPS Proxy & Security
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
+
+# Production Security
+if not DEBUG:
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000 # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    CSRF_COOKIE_HTTPONLY = False # Must be False for JS to read it
+else:
+    CSRF_COOKIE_HTTPONLY = False
 
 INSTALLED_APPS = [
     'daphne',  # Must be first for ASGI
