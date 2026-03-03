@@ -24,7 +24,7 @@
     <div class="sessions-list">
       {% for session in sessions %}
       <div
-        class="session-item {% if forloop.first %}active{% endif %}"
+        class="session-item"
         data-session-id="{{ session.id }}"
         onclick="loadSession('{{ session.id }}')"
       >
@@ -215,7 +215,7 @@
   window.SYNAPSE = {
       wsUrl:            (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/chat/',
       csrfToken:        "{{ csrf_token }}",
-      currentSessionId: {% if sessions %}"{{ sessions.0.id }}"{% else %}null{% endif %}
+      currentSessionId: null
   };
 </script>
 <script src="{% static 'chat/js/chat.js' %}"></script>

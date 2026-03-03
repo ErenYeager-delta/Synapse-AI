@@ -213,7 +213,7 @@ Guidelines:
 def generate_title(user_query, ai_response):
     """
     Generate a professional 3-5 word title for a chat session.
-    Internal use only — doesn't use cache or query logging.
+    Direct synchronous call for stability.
     """
     from langchain.schema import HumanMessage, SystemMessage
     prompt = f"""Summarize the following interaction into a short, professional, 3-5 word title.
@@ -226,11 +226,14 @@ AI: {ai_response[:200]}"""
         HumanMessage(content=prompt)
     ]
     
-    # We use a simplified version of rotation here or just call the main engine
-    # To keep it seamless, we'll use one of the keys directly or a simplified loop
     try:
-        # Re-using the logic but with a dummy user_id to avoid usage tracking
-        return get_ai_response(user_id="SYSTEM_TITLER", messages=messages)
+        # Use primary key directly for a quick sync titling call
+        api_key, _ = _get_api_key("SYSTEM_TITLER")
+        if not api_key: return "Chat session"
+        
+        llm = _get_llm("SYSTEM_TITLER", api_key)
+        res = llm.invoke(messages)
+        return res.content.strip().replace('"', '')[:50]
     except Exception:
         # Fallback to simple truncation if Gemini fails to title
         return user_query[:40].strip() + ("..." if len(user_query) > 40 else "")

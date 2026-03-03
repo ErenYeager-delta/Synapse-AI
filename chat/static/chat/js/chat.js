@@ -46,7 +46,12 @@ const SynapseChat = (() => {
     ws = new WebSocket(url);
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      if (data.type === "status" && data.session_id) currentSessionId = data.session_id;
+      if (data.type === "status" && data.session_id) {
+        if (!currentSessionId || currentSessionId !== data.session_id) {
+            currentSessionId = data.session_id;
+            refreshSidebarHighlights();
+        }
+      }
       handleWSMessage(data);
     };
     ws.onclose = () => setTimeout(connectWebSocket, 3000);
@@ -73,7 +78,14 @@ const SynapseChat = (() => {
     if (currentSessionId === sessionId) {
       const headerTitle = $("#chat-title");
       if (headerTitle) headerTitle.textContent = title;
+      refreshSidebarHighlights();
     }
+  }
+
+  function refreshSidebarHighlights() {
+    $$(".session-item").forEach(el => {
+        el.classList.toggle("active", el.dataset.sessionId === currentSessionId);
+    });
   }
 
   function addUserMessage(text) {
