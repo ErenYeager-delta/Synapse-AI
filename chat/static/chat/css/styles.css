@@ -3,25 +3,25 @@
 ═══════════════════════════════════════════════════════════ */
 
 :root {
-  --bg-darker: #0d0d0d;
-  --bg-gradient: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%);
-  --surface: #1a1a1a;
-  --surface-hover: #262626;
-  --accent-cyan: #10b981;
-  --accent-rose: #f43f5e;
-  --accent-glow: rgba(16, 185, 129, 0.15);
-  --rose-glow: rgba(244, 63, 94, 0.15);
+  --bg-darker: #05090a;
+  --bg-gradient: linear-gradient(135deg, #05090a 0%, #0a1214 100%);
+  --surface: #0a1214;
+  --surface-hover: #0f1a1d;
+  --accent-cyan: #00f2ff;
+  --accent-secondary: #008b9c;
+  --accent-glow: rgba(0, 242, 255, 0.15);
+  --secondary-glow: rgba(0, 139, 156, 0.1);
   --text-primary: #e2e8f0;
-  --text-secondary: #64748b;
-  --text-muted: #475569;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
   --border: rgba(255, 255, 255, 0.05);
-  --border-bright: rgba(16, 185, 129, 0.2);
+  --border-bright: rgba(0, 242, 255, 0.2);
   --sidebar-width: 280px;
   --radius-xl: 12px;
   --radius-lg: 8px;
   --radius-md: 4px;
   --shadow-main: 0 4px 20px rgba(0, 0, 0, 0.8);
-  --shadow-glow: 0 0 10px var(--accent-glow);
+  --shadow-glow: 0 0 15px var(--accent-glow);
 }
 
 * {
@@ -71,12 +71,12 @@ body {
   background-image:
     radial-gradient(
       circle at 10% 20%,
-      rgba(16, 185, 129, 0.05) 0%,
+      rgba(0, 242, 255, 0.05) 0%,
       transparent 50%
     ),
     radial-gradient(
       circle at 90% 80%,
-      rgba(244, 63, 94, 0.03) 0%,
+      rgba(0, 139, 156, 0.03) 0%,
       transparent 50%
     );
   animation: rotate 60s linear infinite;
@@ -177,8 +177,8 @@ body {
   display: inline-flex;
   align-items: center;
   padding: 8px 16px;
-  background: rgba(6, 182, 212, 0.1);
-  border: 1px solid rgba(6, 182, 212, 0.2);
+  background: rgba(0, 242, 255, 0.1);
+  border: 1px solid rgba(0, 242, 255, 0.2);
   border-radius: 100px;
   color: var(--accent-cyan);
   font-size: 13px;
@@ -402,7 +402,7 @@ select.form-input {
 .sidebar {
   width: var(--sidebar-width);
   height: 100vh;
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(5, 9, 10, 0.98);
   backdrop-filter: blur(30px);
   border-right: 1px solid var(--border);
   display: flex;
@@ -512,7 +512,7 @@ select.form-input {
 @keyframes pulse { 0% { transform: scale(1); opacity:1; } 50% { transform: scale(1.2); opacity:0.6; } 100% { transform: scale(1); opacity:1; } }
 
 .usage-bar-container { height:6px; width:100%; background:rgba(0,0,0,0.3); border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.05); }
-.usage-bar { height:100%; background:linear-gradient(90deg, var(--accent-cyan), #34D399); border-radius:10px; transition:width 1s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 8px var(--accent-glow); }
+.usage-bar { height:100%; background:linear-gradient(90deg, var(--accent-cyan), var(--accent-secondary)); border-radius:10px; transition:width 1s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--accent-glow); }
 .usage-text { font-size:11px; color:var(--text-secondary); font-weight:600; font-variant-numeric: tabular-nums; }
 .footer-main {
   display: flex;
@@ -564,7 +564,7 @@ select.form-input {
 .user-badge.staff {
     background: var(--accent-glow);
     color: var(--accent-cyan);
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    border: 1px solid rgba(0, 242, 255, 0.3);
 }
 .sidebar-actions {
   display: flex;
@@ -696,8 +696,8 @@ select.form-input {
   box-shadow: 0 4px 20px var(--accent-glow);
 }
 .message-ai .message-bubble {
-  background: #1a1a1a;
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: var(--surface);
+  border: 1px solid var(--border-bright);
   box-shadow: 0 2px 10px var(--accent-glow);
 }
 
@@ -754,7 +754,7 @@ select.form-input {
   display: flex;
   align-items: flex-end;
   gap: 12px;
-  background: rgba(30, 41, 59, 0.7);
+  background: rgba(10, 18, 20, 0.8);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: 12px 16px;
