@@ -96,6 +96,13 @@ def verify_signup_view(request):
     if not otp_service.verify_otp(email, otp):
         return JsonResponse({'status': 'error', 'message': 'Invalid or expired OTP.'})
 
+    # Backend Password Validation (Double check)
+    import re
+    if len(password) < 8:
+        return JsonResponse({'status': 'error', 'message': 'Password must be at least 8 characters.'})
+    if not re.search(r'[a-zA-Z]', password) or not re.search(r'[0-9]', password) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        return JsonResponse({'status': 'error', 'message': 'Password is not strong enough (letter, number, and special character required).'})
+
     from django.conf import settings
     # For MongoDB, we can count documents
     if mongo_store.users.count_documents({}) >= settings.MAX_USERS:

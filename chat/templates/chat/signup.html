@@ -30,7 +30,15 @@
             </div>
             <div class="form-group">
                 <label class="form-label">Password</label>
-                <input type="password" id="password" class="form-input" placeholder="Min 8 characters" required>
+                <input type="password" id="password" class="form-input" 
+                       placeholder="Create a strong password" 
+                       oninput="validatePassword(this)" required>
+                <ul class="password-requirements">
+                    <li id="req-length" class="requirement-item invalid">Min 8 characters</li>
+                    <li id="req-letter" class="requirement-item invalid">At least one letter</li>
+                    <li id="req-number" class="requirement-item invalid">At least one number</li>
+                    <li id="req-special" class="requirement-item invalid">At least one special character (@#$!%*)</li>
+                </ul>
             </div>
             <div id="step1-error" class="error-message" style="display:none;"></div>
             <button id="btn-send-otp" class="btn-primary" onclick="sendOTP(event)">Send OTP &#8594;</button>
@@ -91,6 +99,32 @@ function validateUsername(input) {
     }
 }
 
+// ── Validate password as user types ──────────────────────────
+function validatePassword(input) {
+    const val = input.value;
+    const reqs = {
+        length:  val.length >= 8,
+        letter:  /[a-zA-Z]/.test(val),
+        number:  /[0-9]/.test(val),
+        special: /[!@#$%^&*(),.?":{}|<>]/.test(val)
+    };
+
+    updateReq('req-length',  reqs.length);
+    updateReq('req-letter',  reqs.letter);
+    updateReq('req-number',  reqs.number);
+    updateReq('req-special', reqs.special);
+
+    input.style.borderColor = (reqs.length && reqs.letter && reqs.number && reqs.special) 
+        ? 'var(--accent-cyan)' : 'var(--border)';
+}
+
+function updateReq(id, isValid) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle('valid', isValid);
+    el.classList.toggle('invalid', !isValid);
+}
+
 // ── Step 1: Send OTP ─────────────────────────────────────────
 async function sendOTP(event) {
     const btn      = document.getElementById('btn-send-otp');
@@ -114,8 +148,17 @@ async function sendOTP(event) {
     if (username.length > 30) {
         showError(errBox, 'Username must be 30 characters or less.'); return;
     }
+
+    // Strict Password Validation
+    const hasLetter  = /[a-zA-Z]/.test(password);
+    const hasNumber  = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
     if (password.length < 8) {
         showError(errBox, 'Password must be at least 8 characters.'); return;
+    }
+    if (!hasLetter || !hasNumber || !hasSpecial) {
+        showError(errBox, 'Password must include at least one letter, one number, and one special character.'); return;
     }
     if (!/\S+@\S+\.\S+/.test(email)) {
         showError(errBox, 'Please enter a valid email address.'); return;

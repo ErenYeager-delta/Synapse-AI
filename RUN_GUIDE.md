@@ -11,9 +11,9 @@ Use this guide as a quick reference for running and maintaining your AI Coding A
 **Purpose**: Best for active coding. Automatically restarts the server when you save changes.
 
 ```powershell
-# Purpose: Launches the standard Django dev server.
-# Why: Validates template logic and Python code changes instantly.
-python manage.py runserver
+# Purpose: Launches the standard Django dev server on all network interfaces.
+# Why: Allows you to access the app from your phone on the same Wi-Fi using your PC's IP.
+python manage.py runserver 0.0.0.0:8000
 ```
 
 ### B. High-Performance (DAPHNE)
@@ -21,9 +21,9 @@ python manage.py runserver
 **Purpose**: Recommended for active chat sessions. Provides the most responsive WebSocket streaming.
 
 ```powershell
-# Purpose: Runs the app using the ASGI (Asynchronous Server Gateway Interface).
-# Why: Daphne is required for WebSockets to stream AI responses token-by-token without lag.
-daphne -b 127.0.0.1 -p 8000 synapse_project.asgi:application
+# Purpose: Runs the app using the ASGI (Asynchronous Server Gateway Interface) on all interfaces.
+# Why: Daphne is required for WebSockets. Binding to 0.0.0.0 allows mobile access.
+daphne -b 0.0.0.0 -p 8000 synapse_project.asgi:application
 ```
 
 ---
