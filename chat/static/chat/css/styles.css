@@ -1162,10 +1162,7 @@ select.form-input {
   .sessions-list {
     -webkit-overflow-scrolling: touch;
   }
-  /* Soften root lock for mobile touch engine */
-  html, body {
-    overflow: clip; 
-  }
+  /* REMOVED: overflow: clip was killing ALL mobile scrolling */
 }
 
 @media (max-width: 480px) {
