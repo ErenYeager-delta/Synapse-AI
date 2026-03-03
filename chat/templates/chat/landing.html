@@ -18,7 +18,8 @@
             <a href="/logout/" class="btn-signup">Logout</a>
         {% else %}
             <a href="/login/" class="nav-link">Sign In</a>
-            currentSessionId: "{% if sessions %}{{ sessions.0.id }}{% else %}null{% endif %}"
+            <a href="/signup/" class="btn-signup">Join Beta &rarr;</a>
+        {% endif %}
     </div>
 </nav>
 
