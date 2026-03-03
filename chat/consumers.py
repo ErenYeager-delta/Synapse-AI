@@ -23,10 +23,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         try:
             data       = json.loads(text_data)
-            message    = data.get('message', '').strip()
-            session_id = data.get('session_id')
+            message     = data.get('message', '').strip()
+            session_id  = data.get('session_id')
+            attachments = data.get('attachments', [])
 
-            if not message:
+            if not message and not attachments:
                 await self.send(text_data=json.dumps({'type': 'error', 'content': 'Empty message.'}))
                 return
 
@@ -34,8 +35,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if not session_id:
                 session_id = await asyncio.to_thread(mongo_store.create_session, self.user.username)
 
-            # Save user message
-            await asyncio.to_thread(mongo_store.add_message, session_id, 'user', message)
+            # Save user message (including attachment info in text for history)
+            hist_msg = message
+            if attachments:
+                hist_msg += f"\n\n[Attached {len(attachments)} file(s)]"
+            await asyncio.to_thread(mongo_store.add_message, session_id, 'user', hist_msg)
 
             # Send "thinking" indicator
             await self.send(text_data=json.dumps({
@@ -45,16 +49,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
             # Thinking is sent, let ai_engine handle the rest
             from .ai_engine import get_cached_response, set_cached_response, get_or_create_agent
             
-            # Check cache
-            cached = get_cached_response(message)
-            if cached:
-                await self._stream_response(cached, session_id)
-                return
+            # Check cache (only if no attachments)
+            if not attachments:
+                cached = get_cached_response(message)
+                if cached:
+                    await self._stream_response(cached, session_id)
+                    return
 
             # Run AI — centralized rotation in ai_engine handles keys
             try:
                 agent    = get_or_create_agent(self.user.username, session_id)
-                response = await asyncio.to_thread(agent.run, message)
+                # Pass attachments if present
+                if hasattr(agent, 'run_multimodal'):
+                    response = await asyncio.to_thread(agent.run_multimodal, message, attachments)
+                else:
+                    response = await asyncio.to_thread(agent.run, message)
             except Exception as e:
                 err_msg = str(e)
                 logger.error(f"AI error: {err_msg}")

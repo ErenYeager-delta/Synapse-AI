@@ -125,7 +125,7 @@ def _get_preferred_lang(user_id):
         return 'Python'
 
 
-def run_chat(user_id: int, message: str, session_id: str = None) -> str:
+def run_chat(user_id: int, message: str, session_id: str = None, **kwargs) -> str:
     """
     Run a chat turn. Loads conversation history from MongoDB,
     calls Gemini, returns response string.
@@ -146,6 +146,7 @@ Core Directives:
 - Use a sophisticated, precise, yet encouraging professional tone.
 - When explaining complex concepts, use analogies but maintain technical accuracy.
 - Suggest best practices (SOLID, DRY) and warn against common security/performance pitfalls.
+- Vision & Docs: You can now "see" images and "read" documents. Analyze them with extreme precision and relate them to the coding task.
 - Use clean, structured Markdown with syntax-highlighted code blocks."""
 
     messages = [SystemMessage(content=system_prompt)]
@@ -162,7 +163,30 @@ Core Directives:
         except Exception as e:
             logger.warning(f"Could not load history: {e}")
 
-    messages.append(HumanMessage(content=message))
+    attachments = kwargs.get('attachments', [])
+    if not attachments:
+        messages.append(HumanMessage(content=message))
+    else:
+        # Multimodal payload construction
+        content_parts = []
+        if message:
+            content_parts.append({"type": "text", "text": message})
+        
+        for att in attachments:
+            a_type = att.get('type', '')
+            if a_type.startswith('image/'):
+                content_parts.append({
+                    "type": "image_url",
+                    "image_url": f"data:{a_type};base64,{att.get('data')}"
+                })
+            else:
+                # Handle other types (PDF, text) as text context for now
+                content_parts.append({
+                    "type": "text", 
+                    "text": f"\n[File: {att.get('name')}]\n(Binary or large text data processed separately in future phases)\n"
+                })
+        
+        messages.append(HumanMessage(content=content_parts))
     
     # NEW: Log query globally
     mongo_store.log_query(user_id, message)
@@ -267,6 +291,8 @@ class _AgentShim:
         self.session_id = session_id
     def run(self, message):
         return run_chat(self.user_id, message, self.session_id)
+    def run_multimodal(self, message, attachments):
+        return run_chat(self.user_id, message, self.session_id, attachments=attachments)
 
 
 def get_or_create_agent(user_id: int, session_id: str = None):

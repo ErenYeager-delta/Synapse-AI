@@ -5,6 +5,7 @@ const SynapseChat = (() => {
   let streamBuffer = "";
   const DEBOUNCE_MS = 300;
   let lastSendTime = 0;
+  let selectedFiles = []; // Array of { name, type, data }
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => document.querySelectorAll(sel);
 
@@ -106,12 +107,29 @@ const SynapseChat = (() => {
     });
   }
 
-  function addUserMessage(text) {
+  function addUserMessage(text, attachments = []) {
     hideWelcome();
     const container = $("#messages-container");
+    let attachmentHtml = "";
+    if (attachments.length > 0) {
+      attachmentHtml = `<div class="message-attachments">`;
+      attachments.forEach(file => {
+        if (file.type.startsWith("image/")) {
+          attachmentHtml += `<img src="data:${file.type};base64,${file.data}" class="msg-img-preview" alt="${file.name}">`;
+        } else {
+          attachmentHtml += `<div class="msg-file-pill">📄 ${file.name}</div>`;
+        }
+      });
+      attachmentHtml += `</div>`;
+    }
     container.insertAdjacentHTML("beforeend",
-      `<div class="message-user"><div class="message-bubble">${escapeHtml(text)}</div></div>`
+      `<div class="message-user"><div class="message-bubble">${attachmentHtml}${escapeHtml(text)}</div></div>`
     );
+    // Ensure scrolling happens after images load
+    const lastMsg = container.lastElementChild;
+    lastMsg.querySelectorAll("img").forEach(img => {
+      img.onload = scrollToBottom;
+    });
     scrollToBottom();
   }
 
@@ -167,21 +185,99 @@ const SynapseChat = (() => {
   }
 
   function sendMessage() {
+    if (isStreaming) return;
+    const input = $("#message-input");
+    const text = input.value.trim();
+    if (!text && selectedFiles.length === 0) return;
+
+    // Rate limiting
     const now = Date.now();
     if (now - lastSendTime < DEBOUNCE_MS) return;
-    const input = $("#message-input");
-    const message = input.value.trim();
-    if (!message || isStreaming) return;
     lastSendTime = now;
-    addUserMessage(message);
-    input.value = ""; input.style.height = "auto";
-    $("#btn-send").disabled = true; input.disabled = true;
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ message, session_id: currentSessionId }));
-    } else {
+
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
       showError("Connection lost. Reconnecting...");
       connectWebSocket();
+      return;
     }
+
+    // Add user message to UI
+    addUserMessage(text, selectedFiles);
+    input.value = "";
+    input.style.height = "auto";
+    hideWelcome();
+    $("#btn-send").disabled = true;
+    input.disabled = true;
+
+    // Prepare message with attachments
+    const payload = {
+      message: text,
+      session_id: currentSessionId,
+      attachments: selectedFiles.map(f => ({
+        name: f.name,
+        type: f.type,
+        data: f.data
+      }))
+    };
+
+    ws.send(JSON.stringify(payload));
+    
+    // Clear selected files
+    selectedFiles = [];
+    renderFilePreviews();
+  }
+
+  function handleFileSelect(event) {
+    const files = Array.from(event.target.files);
+    files.forEach(file => {
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`File ${file.name} is too large (max 5MB)`);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        selectedFiles.push({
+          name: file.name,
+          type: file.type,
+          data: e.target.result.split(',')[1] // base64 only
+        });
+        renderFilePreviews();
+      };
+      reader.readAsDataURL(file);
+    });
+    // Clear input so same file can be selected again
+    event.target.value = "";
+  }
+
+  function renderFilePreviews() {
+    const area = $("#file-preview-area");
+    if (!area) return;
+    area.innerHTML = "";
+    if (selectedFiles.length === 0) {
+      area.style.display = "none";
+      return;
+    }
+    area.style.display = "flex";
+    selectedFiles.forEach((file, index) => {
+      const item = document.createElement("div");
+      item.className = "file-preview-item";
+      if (file.type.startsWith("image/")) {
+        item.innerHTML = `<img src="data:${file.type};base64,${file.data}" alt="${file.name}">`;
+      } else {
+        item.innerHTML = `📄`; 
+      }
+      const removeBtn = document.createElement("div");
+      removeBtn.className = "btn-remove-file";
+      removeBtn.innerHTML = "&times;";
+      removeBtn.onclick = () => removeFile(index);
+      item.appendChild(removeBtn);
+      area.appendChild(item);
+    });
+  }
+
+  function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    renderFilePreviews();
   }
 
   function loadSession(sessionId) {
@@ -295,7 +391,7 @@ const SynapseChat = (() => {
     else { alert("Error saving settings."); btn.disabled = false; btn.innerText = "Save Changes"; }
   }
 
-  return { init, sendMessage, loadSession, newChat, deleteSession, openSettings, closeSettings, saveSettings };
+  return { init, sendMessage, loadSession, newChat, deleteSession, openSettings, closeSettings, saveSettings, handleFileSelect };
 })();
 
 window.SynapseChat = SynapseChat;
@@ -313,3 +409,4 @@ function handleKeyDown(event)  { if (event.key === "Enter" && !event.shiftKey) {
 function autoResize(textarea)  { textarea.style.height = "auto"; textarea.style.height = Math.min(textarea.scrollHeight, 150) + "px"; }
 function toggleSidebar()       { document.getElementById("sidebar").classList.toggle("open"); document.getElementById("sidebar-overlay").classList.toggle("show"); }
 function closeSidebarMobile()  { document.getElementById("sidebar").classList.remove("open"); document.getElementById("sidebar-overlay").classList.remove("show"); }
+function handleFileSelect(e)   { SynapseChat.handleFileSelect(e); }
