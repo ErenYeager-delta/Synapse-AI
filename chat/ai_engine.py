@@ -16,8 +16,8 @@ def _secure_hash(data: str) -> str:
 
 # --- 2026 ROADMAP CONFIG ---
 AI_MODELS = {
-    'PRIMARY': 'gemini-2.5-flash',
-    'FALLBACK': 'gemini-2.5-flash-lite',
+    'PRIMARY': 'gemini-1.5-flash',
+    'FALLBACK': 'gemini-1.5-flash-8b',
     'VERSION': 'v1'
 }
 
@@ -116,10 +116,8 @@ def _get_llm(user_id, api_key=None):
         google_api_key=api_key,
         temperature=0.4,
         max_output_tokens=4096,
-        convert_system_message_to_human=True,
         max_retries=0, # Force immediate rotation by our logic
         timeout=30,    # Don't hang forever
-        version="v1"   # Stable long-term version
     )
 
 
@@ -146,6 +144,7 @@ The user prefers: {lang}. Prioritize {lang} in all code examples.
 
 Core Directives:
 - Act as a Senior Staff Engineer. Provide deep technical analysis, not just surface-level code.
+- Continuous Evolution: You have a persistent memory across this session. Refer back to previous decisions and context to provide cohesive engineering advice.
 - Offer alternative architectural approaches and explain trade-offs clearly.
 - Code must be production-ready, performant, and include rigorous error handling.
 - Use a sophisticated, precise, yet encouraging professional tone.
@@ -156,10 +155,10 @@ Core Directives:
 
     messages = [SystemMessage(content=system_prompt)]
 
-    # Load last 10 messages from MongoDB for context
+    # Load last 20 messages from MongoDB for context (Memory Power Boost)
     if session_id:
         try:
-            history = mongo_store.get_messages(session_id)[-10:]
+            history = mongo_store.get_messages(session_id)[-20:]
             for m in history:
                 if m['role'] == 'user':
                     messages.append(HumanMessage(content=m['content']))
