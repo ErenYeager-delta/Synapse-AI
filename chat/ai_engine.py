@@ -116,8 +116,9 @@ def _get_llm(user_id, api_key=None):
         google_api_key=api_key,
         temperature=0.4,
         max_output_tokens=4096,
-        max_retries=0, # Force immediate rotation by our logic
-        timeout=30,    # Don't hang forever
+        max_retries=0, 
+        timeout=30,
+        version="v1"   # Force stable v1 API
     )
 
 
