@@ -16,9 +16,9 @@ def _secure_hash(data: str) -> str:
 
 # --- 2026 ROADMAP CONFIG ---
 AI_MODELS = {
-    'PRIMARY': 'gemini-1.5-flash-latest',
-    'FALLBACK': 'gemini-1.5-flash',
-    'PRO': 'gemini-1.5-pro-latest',
+    'PRIMARY': 'gemini-1.5-flash',
+    'FALLBACK': 'gemini-1.5-flash-001',
+    'PRO': 'gemini-1.5-pro',
     'VERSION': 'v1'
 }
 
