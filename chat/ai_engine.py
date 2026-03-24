@@ -16,8 +16,9 @@ def _secure_hash(data: str) -> str:
 
 # --- 2026 ROADMAP CONFIG ---
 AI_MODELS = {
-    'PRIMARY': 'gemini-1.5-flash',
-    'FALLBACK': 'gemini-1.5-flash-8b',
+    'PRIMARY': 'gemini-1.5-flash-latest',
+    'FALLBACK': 'gemini-1.5-flash',
+    'PRO': 'gemini-1.5-pro-latest',
     'VERSION': 'v1'
 }
 
@@ -272,27 +273,34 @@ def generate_title(user_query, ai_response):
     Generate a professional 3-5 word title for a chat session.
     Direct synchronous call for stability.
     """
+    if not user_query or not ai_response:
+        return "New Chat"
+
     from langchain.schema import HumanMessage, SystemMessage
-    prompt = f"""Summarize the following interaction into a short, professional, 3-5 word title.
-Do NOT use punctuation. Return ONLY the title.
-USER: {user_query}
-AI: {ai_response[:200]}"""
+    prompt = f"Summarize into a 3-5 word professional title (no punctuation): {user_query}"
     
     messages = [
-        SystemMessage(content="You are a professional session titler. Be extremely concise."),
+        SystemMessage(content="You are a professional session titler. Return ONLY the title."),
         HumanMessage(content=prompt)
     ]
     
     try:
-        # Use primary key directly for a quick sync titling call
+        # Use primary key directly with a shorter timeout for titling
         api_key, _ = _get_api_key("SYSTEM_TITLER")
-        if not api_key: return "Chat session"
+        if not api_key: return user_query[:40]
         
-        llm = _get_llm("SYSTEM_TITLER", api_key)
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        llm = ChatGoogleGenerativeAI(
+            model=AI_MODELS['PRIMARY'],
+            google_api_key=api_key,
+            temperature=0.2,
+            timeout=10, # Very short timeout for titler to prevent hanging the chat
+            version="v1"
+        )
         res = llm.invoke(messages)
-        return res.content.strip().replace('"', '')[:50]
+        return res.content.strip().replace('"', '').replace('.', '')[:50]
     except Exception:
-        # Fallback to simple truncation if Gemini fails to title
+        # Fallback to simple truncation if Gemini fails or hangs
         return user_query[:40].strip() + ("..." if len(user_query) > 40 else "")
 
 
