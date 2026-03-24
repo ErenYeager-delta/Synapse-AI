@@ -89,9 +89,30 @@ const SynapseChat = (() => {
   }
 
   function updateSidebarTitle(sessionId, title) {
-    // Update sidebar item
-    const item = $(`.session-item[data-session-id="${sessionId}"] .session-title`);
-    if (item) item.textContent = title;
+    let item = $(`.session-item[data-session-id="${sessionId}"]`);
+    
+    // If session doesn't exist in sidebar, add it!
+    if (!item) {
+        const noSessionsMsg = $(".no-sessions");
+        if (noSessionsMsg) noSessionsMsg.remove();
+
+        const list = $(".sessions-list");
+        if (list) {
+            const newItem = document.createElement("div");
+            newItem.className = "session-item";
+            newItem.setAttribute("data-session-id", sessionId);
+            newItem.onclick = () => loadSession(sessionId);
+            newItem.innerHTML = `
+                <span class="session-title">${title}</span>
+                <button class="btn-delete-session" onclick="event.stopPropagation(); SynapseChat.deleteSession('${sessionId}')" title="Delete">&times;</button>
+            `;
+            list.prepend(newItem);
+            item = newItem;
+        }
+    }
+
+    const titleEl = $(`.session-item[data-session-id="${sessionId}"] .session-title`);
+    if (titleEl) titleEl.textContent = title;
     
     // Also update current active header if it's the same session
     if (currentSessionId === sessionId) {

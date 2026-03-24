@@ -160,10 +160,17 @@ Core Directives:
         try:
             history = mongo_store.get_messages(session_id)[-20:]
             for m in history:
+                content = m.get('content', '').strip()
+                if not content: continue # Skip empty messages
+                
                 if m['role'] == 'user':
-                    messages.append(HumanMessage(content=m['content']))
+                    messages.append(HumanMessage(content=content))
                 elif m['role'] == 'assistant':
-                    messages.append(AIMessage(content=m['content']))
+                    messages.append(AIMessage(content=content))
+                
+            # SAFETY CHECK: Ensure the list of messages alternates properly
+            # LLMs can crash if they see consecutive messages from the same role.
+            # Our structure: System -> [History...] -> New User Message.
         except Exception as e:
             logger.warning(f"Could not load history: {e}")
 
