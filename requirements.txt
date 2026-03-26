@@ -30,7 +30,7 @@ cryptography>=42.0.0
 
 # Utilities
 python-dotenv==1.2.2
-requests==2.32.5
+requests==2.33.0
 dj-database-url==2.3.0
 
 # Static Files (Production)
