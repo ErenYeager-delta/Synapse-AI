@@ -1,7 +1,7 @@
 # Synapse AI — Fixed Dependencies (Python 3.12+)
 # REMOVED: djongo, google-generativeai (deprecated)
 
-Django==4.2.29
+Django==4.2.30
 sqlparse==0.5.4
 
 # MongoDB via PyMongo ONLY (no djongo)
