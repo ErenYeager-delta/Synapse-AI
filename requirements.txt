@@ -18,7 +18,7 @@ channels==4.1.0
 channels-redis==4.2.1
 
 # LangChain & Gemini AI
-langchain==0.3.27
+langchain==0.3.30
 langchain-core==0.3.83
 langchain-google-genai==2.1.2
 langchain-community==0.3.31
